@@ -1,0 +1,3417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillBridge | Student Skill Exchange Platform</title>
+  <meta name="description" content="Learn, Share, and Grow Together. Student-to-student skill sharing platform for peer mentorship, barter learning, and reputation building." />
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              950: '#1e1b4b',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -2px rgba(0, 0, 0, 0.03)',
+            'soft-lg': '0 12px 30px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04)',
+            'soft-xl': '0 20px 40px -6px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.06)',
+            'glow': '0 0 25px -3px rgba(99, 102, 241, 0.35)',
+            'glow-emerald': '0 0 25px -3px rgba(16, 185, 129, 0.35)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* =============================================
+       ATTRACTIVE GLOBAL BACKGROUND — Animated Mesh
+       ============================================= */
+    body {
+      background: #0f0e2e;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(99,102,241,0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(168,85,247,0.30) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.10) 0%, transparent 70%);
+      min-height: 100vh;
+    }
+
+    /* Floating gradient orbs behind content */
+    #root::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle 700px at 15% 30%, rgba(99,102,241,0.18) 0%, transparent 70%),
+        radial-gradient(circle 500px at 85% 70%, rgba(168,85,247,0.20) 0%, transparent 70%),
+        radial-gradient(circle 400px at 55% 90%, rgba(16,185,129,0.12) 0%, transparent 70%),
+        radial-gradient(circle 350px at 70% 10%, rgba(236,72,153,0.10) 0%, transparent 70%);
+      animation: bgDrift 18s ease-in-out infinite alternate;
+    }
+    #root {
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes bgDrift {
+      0%   { transform: translateY(0px) scale(1); }
+      33%  { transform: translateY(-18px) scale(1.02); }
+      66%  { transform: translateY(10px) scale(0.99); }
+      100% { transform: translateY(-8px) scale(1.01); }
+    }
+
+    /* Subtle grid overlay for depth */
+    #root::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* Custom polished scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.7); }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Glassmorphic card surfaces */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glass-card-light {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Shimmer animation for skeleton/highlight */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .animate-shimmer {
+      background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.15) 50%, transparent 75%);
+      background-size: 800px 100%;
+      animation: shimmer 2s infinite;
+    }
+
+    /* Float up animation for hero elements */
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-float-up {
+      animation: floatUp 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+
+    /* Pulse glow for accent elements */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.3), 0 0 40px rgba(99,102,241,0.1); }
+      50%       { box-shadow: 0 0 30px rgba(99,102,241,0.5), 0 0 60px rgba(99,102,241,0.2); }
+    }
+    .animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="text-slate-900 antialiased selection:bg-brand-500 selection:text-white min-h-screen">
+  <div id="root"></div>
+
+  <!-- Main Standalone Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useContext, createContext } = React;
+
+    // ==========================================
+    // 1. DATA MODELS & MOCK DATA
+    // ==========================================
+    const CURRENT_USER = {
+      id: "student-0",
+      name: "Alex Johnson",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      department: "Information Technology",
+      year: "2nd Year",
+      email: "alex.johnson@campus.edu",
+      reputationScore: 4.9,
+      totalExchanges: 14,
+      completedSessions: 12,
+      helpfulVotes: 38,
+      responseRate: "98%",
+      bio: "Passionate about full-stack web development and core computer science fundamentals. Looking to dive deep into Machine Learning and Python for data science.",
+      skillsCanTeach: [
+        { name: "Java", level: "Advanced", endorsements: 18, category: "Programming" },
+        { name: "Web Development", level: "Advanced", endorsements: 22, category: "Web Development" },
+        { name: "C Programming", level: "Intermediate", endorsements: 12, category: "Programming" },
+        { name: "Git & GitHub", level: "Intermediate", endorsements: 15, category: "Web Development" }
+      ],
+      skillsWantToLearn: [
+        { name: "Python", priority: "High", category: "Programming" },
+        { name: "UI/UX Design", priority: "High", category: "Design" },
+        { name: "Machine Learning", priority: "Medium", category: "AI & ML" }
+      ],
+      badges: [
+        { title: "Top Mentor", desc: "Completed 10+ high-rated exchanges", icon: "Award", color: "amber" },
+        { title: "Fast Responder", desc: "Replies within 15 minutes", icon: "Zap", color: "indigo" },
+        { title: "Peer Choice", desc: "Rated 5-stars by 95% of partners", icon: "Star", color: "emerald" },
+        { title: "Code Guru", desc: "Helped 8+ students debug code", icon: "Code", color: "purple" }
+      ]
+    };
+
+    const SKILL_CATEGORIES = [
+      "All Skills", "Programming", "Web Development", "AI & ML", "Design",
+      "Communication", "Languages", "Agriculture", "Electronics", "Business", "Other"
+    ];
+
+    const SKILLS_LIST = [
+      {
+        id: "sk-1",
+        name: "Python",
+        category: "Programming",
+        studentsCount: 142,
+        popularity: 98,
+        trending: true,
+        description: "Data analysis, automation scripting, machine learning and Flask/Django backend development.",
+        icon: "Code",
+        color: "from-blue-500 to-indigo-600"
+      },
+      {
+        id: "sk-2",
+        name: "Java",
+        category: "Programming",
+        studentsCount: 128,
+        popularity: 94,
+        trending: false,
+        description: "Object-oriented programming, data structures, algorithms, and enterprise Spring framework.",
+        icon: "Laptop",
+        color: "from-amber-500 to-orange-600"
+      },
+      {
+        id: "sk-3",
+        name: "Web Development",
+        category: "Web Development",
+        studentsCount: 195,
+        popularity: 99,
+        trending: true,
+        description: "HTML5, modern CSS, modern JavaScript (ES6+), React.js, Tailwind CSS, and RESTful APIs.",
+        icon: "Globe",
+        color: "from-cyan-500 to-blue-600"
+      },
+      {
+        id: "sk-4",
+        name: "UI/UX Design",
+        category: "Design",
+        studentsCount: 88,
+        popularity: 91,
+        trending: true,
+        description: "User research, wireframing, high-fidelity Figma prototyping, typography, and design systems.",
+        icon: "Palette",
+        color: "from-purple-500 to-pink-600"
+      },
+      {
+        id: "sk-5",
+        name: "Machine Learning",
+        category: "AI & ML",
+        studentsCount: 76,
+        popularity: 93,
+        trending: true,
+        description: "Supervised & unsupervised learning, regression, classification, Pandas, NumPy, and TensorFlow.",
+        icon: "Brain",
+        color: "from-emerald-500 to-teal-600"
+      },
+      {
+        id: "sk-6",
+        name: "C Programming",
+        category: "Programming",
+        studentsCount: 110,
+        popularity: 85,
+        trending: false,
+        description: "Low-level memory management, pointers, structures, file handling, and hardware interfaces.",
+        icon: "Cpu",
+        color: "from-slate-600 to-slate-800"
+      },
+      {
+        id: "sk-7",
+        name: "Graphic Design",
+        category: "Design",
+        studentsCount: 64,
+        popularity: 82,
+        trending: false,
+        description: "Photoshop, Illustrator, social media asset creation, logo designing, and vector illustrations.",
+        icon: "Palette",
+        color: "from-rose-500 to-pink-600"
+      },
+      {
+        id: "sk-8",
+        name: "Video Editing",
+        category: "Design",
+        studentsCount: 52,
+        popularity: 79,
+        trending: true,
+        description: "Premiere Pro, DaVinci Resolve, video pacing, color grading, sound design, and TikTok/Reels edits.",
+        icon: "Sparkles",
+        color: "from-violet-500 to-purple-700"
+      },
+      {
+        id: "sk-9",
+        name: "Public Speaking",
+        category: "Communication",
+        studentsCount: 45,
+        popularity: 77,
+        trending: false,
+        description: "Presentation confidence, pitch decks, debate tactics, voice modulation, and stage presence.",
+        icon: "MessageSquare",
+        color: "from-amber-400 to-orange-500"
+      },
+      {
+        id: "sk-10",
+        name: "English Proficiency",
+        category: "Languages",
+        studentsCount: 84,
+        popularity: 86,
+        trending: false,
+        description: "Professional spoken English, interview prep, academic writing, and IELTS/TOEFL coaching.",
+        icon: "Globe",
+        color: "from-sky-500 to-blue-700"
+      },
+      {
+        id: "sk-11",
+        name: "Tamil",
+        category: "Languages",
+        studentsCount: 38,
+        popularity: 70,
+        trending: false,
+        description: "Spoken Tamil fluency, cultural nuances, conversational practice, and regional dialect mastery.",
+        icon: "Globe",
+        color: "from-emerald-400 to-green-600"
+      },
+      {
+        id: "sk-12",
+        name: "Arduino & IoT",
+        category: "Electronics",
+        studentsCount: 62,
+        popularity: 84,
+        trending: true,
+        description: "Sensor integration, microcontrollers, embedded C, ESP32 Wi-Fi modules, and home automation.",
+        icon: "Cpu",
+        color: "from-teal-500 to-cyan-700"
+      },
+      {
+        id: "sk-13",
+        name: "Agriculture Technology",
+        category: "Agriculture",
+        studentsCount: 35,
+        popularity: 75,
+        trending: true,
+        description: "Smart sensor irrigation, crop disease detection, soil moisture monitoring, and hydroponics basics.",
+        icon: "Sprout",
+        color: "from-lime-500 to-emerald-700"
+      },
+      {
+        id: "sk-14",
+        name: "Startup Pitch & Business",
+        category: "Business",
+        studentsCount: 42,
+        popularity: 81,
+        trending: true,
+        description: "Business model canvas, financial projections, investor pitch decks, and lean startup validation.",
+        icon: "Briefcase",
+        color: "from-indigo-500 to-blue-800"
+      }
+    ];
+
+    const STUDENTS_DATA = [
+      {
+        id: "student-1",
+        name: "Rahul Sharma",
+        avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
+        department: "Information Technology",
+        year: "2nd Year",
+        rating: 4.9,
+        reviewsCount: 16,
+        matchPercentage: 95,
+        exchangesCompleted: 11,
+        badge: "Top Mentor",
+        bio: "Passionate Java and C developer. Looking for a peer to exchange Python scripting and UI/UX design tips for our semester hackathon.",
+        canTeach: ["Java", "C Programming", "HTML & CSS"],
+        wantsToLearn: ["Python", "UI/UX Design"],
+        availability: "Evenings (4 PM - 7 PM)",
+        preferredMode: "Library / Google Meet",
+        mutualMatchHighlight: {
+          youTeach: "Java",
+          theyTeach: "Python",
+          matchScore: 95,
+          commonInterests: ["Hackathon Projects", "Web Apps"]
+        }
+      },
+      {
+        id: "student-2",
+        name: "Priya Sundaram",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+        department: "Computer Science",
+        year: "3rd Year",
+        rating: 5.0,
+        reviewsCount: 22,
+        matchPercentage: 92,
+        exchangesCompleted: 18,
+        badge: "Design Guru",
+        bio: "Figma enthusiast with 2 years of product design experience. Eager to barter UI/UX masterclasses in exchange for core Java backend guidance.",
+        canTeach: ["UI/UX Design", "Figma", "Graphic Design"],
+        wantsToLearn: ["Java", "Web Development"],
+        availability: "Weekends & Alternate weekdays",
+        preferredMode: "Campus Tech Hub / Zoom",
+        mutualMatchHighlight: {
+          youTeach: "Web Development",
+          theyTeach: "UI/UX Design",
+          matchScore: 92,
+          commonInterests: ["Design Systems", "Frontend"]
+        }
+      },
+      {
+        id: "student-3",
+        name: "Vikram Raman",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+        department: "AI & Data Science",
+        year: "3rd Year",
+        rating: 4.8,
+        reviewsCount: 14,
+        matchPercentage: 90,
+        exchangesCompleted: 9,
+        badge: "ML Wizard",
+        bio: "Exploring deep neural networks and PyTorch. Can teach Python and machine learning algorithms in exchange for building polished React frontends.",
+        canTeach: ["Python", "Machine Learning", "Data Analysis"],
+        wantsToLearn: ["Web Development", "React.js"],
+        availability: "Flexible Afternoons",
+        preferredMode: "Online via Discord",
+        mutualMatchHighlight: {
+          youTeach: "Web Development",
+          theyTeach: "Machine Learning",
+          matchScore: 90,
+          commonInterests: ["AI Dashboards", "Data Viz"]
+        }
+      },
+      {
+        id: "student-4",
+        name: "Ananya Patel",
+        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
+        department: "Electronics & Communication",
+        year: "2nd Year",
+        rating: 4.7,
+        reviewsCount: 11,
+        matchPercentage: 86,
+        exchangesCompleted: 8,
+        badge: "IoT Maker",
+        bio: "Hardware tinkerer working with Arduino microcontrollers, ESP32, and sensors. Looking to pick up C programming and basic web APIs.",
+        canTeach: ["Arduino & IoT", "Electronics", "Circuit Design"],
+        wantsToLearn: ["C Programming", "Web Development"],
+        availability: "Post 5 PM",
+        preferredMode: "IoT Lab / Google Meet",
+        mutualMatchHighlight: {
+          youTeach: "C Programming",
+          theyTeach: "Arduino & IoT",
+          matchScore: 86,
+          commonInterests: ["Hardware Interfacing", "Robotics"]
+        }
+      },
+      {
+        id: "student-5",
+        name: "Sneha Murugan",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        department: "Agriculture & Biosystems",
+        year: "3rd Year",
+        rating: 4.9,
+        reviewsCount: 19,
+        matchPercentage: 84,
+        exchangesCompleted: 15,
+        badge: "AgriTech Leader",
+        bio: "Working on precision agriculture technologies and soil analytics. Seeking IT students to teach me web development for my smart farming portal.",
+        canTeach: ["Agriculture Technology", "Public Speaking", "Tamil"],
+        wantsToLearn: ["Web Development", "Python"],
+        availability: "Tuesdays & Thursdays",
+        preferredMode: "Central Library",
+        mutualMatchHighlight: {
+          youTeach: "Web Development",
+          theyTeach: "Agriculture Technology",
+          matchScore: 84,
+          commonInterests: ["Smart Systems", "Green Tech"]
+        }
+      },
+      {
+        id: "student-6",
+        name: "Karthik Subramanian",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+        department: "Management Studies / Business",
+        year: "4th Year",
+        rating: 4.9,
+        reviewsCount: 25,
+        matchPercentage: 82,
+        exchangesCompleted: 21,
+        badge: "Pitch Champion",
+        bio: "President of the Campus Entrepreneurship Cell. Happy to help with business pitching, deck structure, and public speaking in exchange for coding support.",
+        canTeach: ["Startup Pitch & Business", "Public Speaking", "English Proficiency"],
+        wantsToLearn: ["Web Development", "UI/UX Design"],
+        availability: "Mornings or Weekends",
+        preferredMode: "Campus Cafe / Google Meet",
+        mutualMatchHighlight: {
+          youTeach: "Web Development",
+          theyTeach: "Public Speaking",
+          matchScore: 82,
+          commonInterests: ["Startup Building", "Presentations"]
+        }
+      },
+      {
+        id: "student-7",
+        name: "Divya Krishnan",
+        avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80",
+        department: "Information Technology",
+        year: "1st Year",
+        rating: 4.6,
+        reviewsCount: 8,
+        matchPercentage: 88,
+        exchangesCompleted: 6,
+        badge: "Rising Talent",
+        bio: "Video editor and creative content producer. Eager to master Java and basic algorithms from senior IT students.",
+        canTeach: ["Video Editing", "Graphic Design", "English Proficiency"],
+        wantsToLearn: ["Java", "C Programming"],
+        availability: "Weekdays 3 PM - 6 PM",
+        preferredMode: "IT Department Lab",
+        mutualMatchHighlight: {
+          youTeach: "Java",
+          theyTeach: "Video Editing",
+          matchScore: 88,
+          commonInterests: ["Media Apps", "Content Creation"]
+        }
+      },
+      {
+        id: "student-8",
+        name: "Arjun Reddy",
+        avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+        department: "Computer Science",
+        year: "2nd Year",
+        rating: 4.8,
+        reviewsCount: 13,
+        matchPercentage: 91,
+        exchangesCompleted: 10,
+        badge: "Algo Whiz",
+        bio: "Competitive programmer and Python developer. Love building terminal tools and algorithmic solvers. Looking to exchange for React tips.",
+        canTeach: ["Python", "C Programming", "Algorithms"],
+        wantsToLearn: ["Web Development", "UI/UX Design"],
+        availability: "Late Evenings",
+        preferredMode: "Google Meet",
+        mutualMatchHighlight: {
+          youTeach: "Web Development",
+          theyTeach: "Python",
+          matchScore: 91,
+          commonInterests: ["Clean Code", "DSA"]
+        }
+      }
+    ];
+
+    const INITIAL_REQUESTS = [
+      {
+        id: "req-1",
+        type: "incoming",
+        status: "pending",
+        student: {
+          id: "student-1",
+          name: "Rahul Sharma",
+          avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
+          department: "Information Technology",
+          year: "2nd Year",
+          rating: 4.9
+        },
+        requestedSkill: "Java",
+        offeredSkill: "Python",
+        message: "Hey Alex! Saw your profile and your experience with Java collections. I have solid Python scripting skills for data analysis. Would love to swap 1-hour sessions!",
+        date: "Today at 2:30 PM",
+        proposedSlot: "Thursday, 4:00 PM"
+      },
+      {
+        id: "req-2",
+        type: "incoming",
+        status: "pending",
+        student: {
+          id: "student-2",
+          name: "Priya Sundaram",
+          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+          department: "Computer Science",
+          year: "3rd Year",
+          rating: 5.0
+        },
+        requestedSkill: "Web Development",
+        offeredSkill: "UI/UX Design",
+        message: "Hi Alex, I need assistance integrating REST APIs into a React frontend for our campus project. In exchange, I can review and rebuild your portfolio in Figma with professional UI/UX standards.",
+        date: "Yesterday at 6:15 PM",
+        proposedSlot: "Friday, 5:30 PM"
+      },
+      {
+        id: "req-3",
+        type: "sent",
+        status: "pending",
+        student: {
+          id: "student-3",
+          name: "Vikram Raman",
+          avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+          department: "AI & Data Science",
+          year: "3rd Year",
+          rating: 4.8
+        },
+        requestedSkill: "Machine Learning",
+        offeredSkill: "Web Development",
+        message: "Hey Vikram, I'd love to learn the basics of linear regression and classification in Python. Happy to teach you React state management and Tailwind CSS styling.",
+        date: "2 days ago",
+        proposedSlot: "Saturday, 2:00 PM"
+      },
+      {
+        id: "req-4",
+        type: "accepted",
+        status: "accepted",
+        student: {
+          id: "student-4",
+          name: "Ananya Patel",
+          avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
+          department: "Electronics & Communication",
+          year: "2nd Year",
+          rating: 4.7
+        },
+        requestedSkill: "C Programming",
+        offeredSkill: "Arduino & IoT",
+        message: "Accepted! Let's connect on chat to coordinate our first session on pointer manipulation and sensor debugging.",
+        date: "3 days ago",
+        proposedSlot: "Wednesday, 3:30 PM"
+      },
+      {
+        id: "req-5",
+        type: "completed",
+        status: "completed",
+        student: {
+          id: "student-7",
+          name: "Divya Krishnan",
+          avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80",
+          department: "Information Technology",
+          year: "1st Year",
+          rating: 4.6
+        },
+        requestedSkill: "Java",
+        offeredSkill: "Video Editing",
+        message: "Completed exchange! Alex explained Java OOP classes and inheritance super clearly, and Divya taught video cut pacing in Premiere Pro.",
+        date: "Last week",
+        ratingGiven: 5,
+        reviewGiven: "Amazing session! Super patient mentor."
+      }
+    ];
+
+    const INITIAL_CONVERSATIONS = [
+      {
+        id: "conv-1",
+        partnerId: "student-4",
+        partnerName: "Ananya Patel",
+        partnerAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
+        department: "ECE - 2nd Year",
+        online: true,
+        skillExchange: "C Programming ⇄ Arduino & IoT",
+        lastMessage: "Sounds great! I'll bring the ESP32 board to the lab tomorrow at 3:30 PM.",
+        lastTime: "10:45 AM",
+        unread: 1,
+        messages: [
+          {
+            id: "m-1",
+            sender: "Ananya Patel",
+            text: "Hey Alex! Thanks for accepting the exchange request.",
+            time: "10:30 AM",
+            isMe: false
+          },
+          {
+            id: "m-2",
+            sender: "Alex Johnson",
+            text: "Hi Ananya! Excited for this. I can help you with dynamic memory allocation in C, and I really want to understand sensor calibration on Arduino.",
+            time: "10:35 AM",
+            isMe: true
+          },
+          {
+            id: "m-3",
+            sender: "Ananya Patel",
+            text: "Sounds great! I'll bring the ESP32 board to the lab tomorrow at 3:30 PM.",
+            time: "10:45 AM",
+            isMe: false
+          }
+        ]
+      },
+      {
+        id: "conv-2",
+        partnerId: "student-2",
+        partnerName: "Priya Sundaram",
+        partnerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+        department: "CSE - 3rd Year",
+        online: false,
+        skillExchange: "Web Development ⇄ UI/UX Design",
+        lastMessage: "I drafted the initial wireframes in Figma. Take a look when you have a second!",
+        lastTime: "Yesterday",
+        unread: 0,
+        messages: [
+          {
+            id: "m-201",
+            sender: "Alex Johnson",
+            text: "Hey Priya, I reviewed the API endpoints for our session on Friday.",
+            time: "Yesterday 4:00 PM",
+            isMe: true
+          },
+          {
+            id: "m-202",
+            sender: "Priya Sundaram",
+            text: "Awesome! I drafted the initial wireframes in Figma. Take a look when you have a second!",
+            time: "Yesterday 4:15 PM",
+            isMe: false
+          }
+        ]
+      }
+    ];
+
+    const REPUTATION_REVIEWS = [
+      {
+        id: "rev-1",
+        author: "Divya Krishnan",
+        authorAvatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80",
+        authorDept: "IT - 1st Year",
+        rating: 5,
+        date: "2 days ago",
+        skill: "Java Fundamentals",
+        comment: "Alex is an incredible peer teacher. He broke down object-oriented programming concepts using real-world analogies that made total sense. 10/10 would exchange skills again!",
+        tags: ["Patient Explainer", "Clear Code Examples", "Punctual"]
+      },
+      {
+        id: "rev-2",
+        author: "Sneha Murugan",
+        authorAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        authorDept: "Agriculture Tech - 3rd Year",
+        rating: 5,
+        date: "1 week ago",
+        skill: "HTML & CSS Styling",
+        comment: "Very helpful and encouraging! Guided me step-by-step on CSS flexbox and media queries so I could build the layout for our smart farming telemetry portal.",
+        tags: ["Hands-on", "Great Problem Solver"]
+      },
+      {
+        id: "rev-3",
+        author: "Arjun Reddy",
+        authorAvatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+        authorDept: "CSE - 2nd Year",
+        rating: 4.8,
+        date: "2 weeks ago",
+        skill: "Git & GitHub Workflows",
+        comment: "Alex solved my merge conflicts and explained rebase vs merge cleanly. Learned more in 45 minutes than in 2 hours of online tutorials.",
+        tags: ["Practical Knowledge", "Super Fast"]
+      }
+    ];
+
+    const TESTIMONIALS = [
+      {
+        quote: "I learned Figma and UI design from a 3rd year CSE senior while teaching him Java Spring. We ended up teaming up for a national hackathon and won 2nd place!",
+        name: "Karthik Subramanian",
+        department: "Information Technology",
+        year: "3rd Year",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+        exchanged: "Java for Figma UI/UX"
+      },
+      {
+        quote: "As an Agriculture student, finding someone to teach me basic web scripting was tough. SkillBridge matched me with Alex in 2 minutes. Peer-to-peer barter is the future.",
+        name: "Sneha Murugan",
+        department: "Agriculture Technology",
+        year: "3rd Year",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        exchanged: "AgriTech for Web Dev"
+      },
+      {
+        quote: "Zero money involved, zero pressure. Just genuine peer knowledge exchange where both students walk away with real hands-on skills.",
+        name: "Priya Sundaram",
+        department: "Computer Science",
+        year: "3rd Year",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+        exchanged: "UI/UX for Java APIs"
+      }
+    ];
+
+    const ADMIN_STATS = {
+      totalStudents: 1428,
+      activeExchanges: 342,
+      popularSkillsCount: 68,
+      pendingReports: 3,
+      recentUsers: [
+        { id: "u-1", name: "Rahul Sharma", email: "rahul.s@campus.edu", dept: "IT", year: "2nd", skills: "Java, C", status: "Active", verified: true },
+        { id: "u-2", name: "Priya Sundaram", email: "priya.s@campus.edu", dept: "CSE", year: "3rd", skills: "UI/UX, Figma", status: "Active", verified: true },
+        { id: "u-3", name: "Vikram Raman", email: "vikram.r@campus.edu", dept: "AI & DS", year: "3rd", skills: "Python, ML", status: "Active", verified: true },
+        { id: "u-4", name: "Ananya Patel", email: "ananya.p@campus.edu", dept: "ECE", year: "2nd", skills: "Arduino, IoT", status: "Active", verified: true },
+        { id: "u-5", name: "Rohan Verma", email: "rohan.v@campus.edu", dept: "Mechanical", year: "1st", skills: "AutoCAD", status: "Flagged", verified: false }
+      ],
+      reportedItems: [
+        { id: "rep-1", reportedUser: "Rohan Verma", reportedBy: "Karthik S.", reason: "No-show for agreed 4 PM session twice without notifying", status: "Pending Review", time: "2 hours ago" },
+        { id: "rep-2", reportedUser: "Anonymous User", reportedBy: "Priya S.", reason: "Inappropriate spam message in skill request description", status: "Investigating", time: "1 day ago" }
+      ]
+    };
+
+    // ==========================================
+    // 2. ICONS COMPONENT
+    // ==========================================
+    const Icon = ({ name, className = "w-5 h-5", fill = "none", ...props }) => {
+      switch (name) {
+        case 'BookOpen':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        case 'Search':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        case 'Users':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+        case 'ArrowRightLeft':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>;
+        case 'Sparkles':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>;
+        case 'Star':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill === 'none' ? 'currentColor' : fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+        case 'MessageSquare':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+        case 'Shield':
+        case 'ShieldCheck':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>;
+        case 'Award':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+        case 'CheckCircle2':
+        case 'Check':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+        case 'Clock':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        case 'Compass':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>;
+        case 'Send':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+        case 'User':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        case 'ChevronRight':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polyline points="9 18 15 12 9 6"/></svg>;
+        case 'ChevronDown':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polyline points="6 9 12 15 18 9"/></svg>;
+        case 'TrendingUp':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
+        case 'ThumbsUp':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg>;
+        case 'X':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        case 'Menu':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        case 'LogOut':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+        case 'Eye':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
+        case 'Calendar':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+        case 'Code':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>;
+        case 'Laptop':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>;
+        case 'Brain':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>;
+        case 'Palette':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>;
+        case 'Globe':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+        case 'Sprout':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/></svg>;
+        case 'Cpu':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>;
+        case 'Briefcase':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
+        case 'Zap':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+        case 'AlertCircle':
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+        default:
+          return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"/></svg>;
+      }
+    };
+
+    // ==========================================
+    // 3. CONTEXT & STATE MANAGEMENT
+    // ==========================================
+    const ExchangeContext = createContext();
+
+    const ExchangeProvider = ({ children }) => {
+      const [activeTab, setActiveTab] = useState('landing');
+      const [isAuthenticated, setIsAuthenticated] = useState(true);
+      const [isAdmin, setIsAdmin] = useState(false);
+      const [currentUser, setCurrentUser] = useState(CURRENT_USER);
+      const [students, setStudents] = useState(STUDENTS_DATA);
+      const [selectedStudent, setSelectedStudent] = useState(null);
+      const [requestModalStudent, setRequestModalStudent] = useState(null);
+      const [searchSkillFilter, setSearchSkillFilter] = useState('');
+      const [requests, setRequests] = useState(INITIAL_REQUESTS);
+      const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
+      const [activeConvId, setActiveConvId] = useState('conv-1');
+      const [reviews, setReviews] = useState(REPUTATION_REVIEWS);
+      const [toasts, setToasts] = useState([]);
+
+      const showToast = (title, message = '', type = 'success') => {
+        const id = Date.now() + Math.random();
+        setToasts(prev => [...prev, { id, title, message, type }]);
+        setTimeout(() => removeToast(id), 4500);
+      };
+
+      const removeToast = (id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      };
+
+      const sendExchangeRequest = ({ student, requestedSkill, offeredSkill, message, proposedSlot = "This Weekend" }) => {
+        const newReq = {
+          id: `req-${Date.now()}`,
+          type: 'sent',
+          status: 'pending',
+          student: {
+            id: student.id,
+            name: student.name,
+            avatar: student.avatar,
+            department: student.department,
+            year: student.year,
+            rating: student.rating
+          },
+          requestedSkill,
+          offeredSkill,
+          message,
+          date: 'Just now',
+          proposedSlot
+        };
+        setRequests(prev => [newReq, ...prev]);
+        showToast('Exchange Request Sent! 🚀', `Your proposal to swap ${offeredSkill} for ${requestedSkill} was sent to ${student.name}.`, 'success');
+        setRequestModalStudent(null);
+      };
+
+      const acceptRequest = (requestId) => {
+        let accepted = null;
+        setRequests(prev => prev.map(req => {
+          if (req.id === requestId) {
+            accepted = req;
+            return { ...req, status: 'accepted', type: 'accepted' };
+          }
+          return req;
+        }));
+
+        if (accepted) {
+          const exists = conversations.find(c => c.partnerId === accepted.student.id);
+          if (!exists) {
+            const newConv = {
+              id: `conv-${Date.now()}`,
+              partnerId: accepted.student.id,
+              partnerName: accepted.student.name,
+              partnerAvatar: accepted.student.avatar,
+              department: `${accepted.student.department} - ${accepted.student.year}`,
+              online: true,
+              skillExchange: `${accepted.offeredSkill} ⇄ ${accepted.requestedSkill}`,
+              lastMessage: `Accepted skill exchange! Let's schedule our first session.`,
+              lastTime: 'Just now',
+              unread: 0,
+              messages: [
+                { id: `m-1`, sender: accepted.student.name, text: accepted.message, time: 'Earlier', isMe: false },
+                { id: `m-2`, sender: currentUser.name, text: `Hey ${accepted.student.name}! I just accepted your exchange request for ${accepted.requestedSkill} ⇄ ${accepted.offeredSkill}. When are you free to connect?`, time: 'Just now', isMe: true }
+              ]
+            };
+            setConversations(prev => [newConv, ...prev]);
+          }
+          showToast('Request Accepted! 🎉', `You and ${accepted.student.name} can now coordinate in Messages.`, 'success');
+        }
+      };
+
+      const rejectRequest = (requestId) => {
+        setRequests(prev => prev.filter(req => req.id !== requestId));
+        showToast('Request Dismissed', 'Proposal removed.', 'info');
+      };
+
+      const sendMessage = (convId, text) => {
+        if (!text.trim()) return;
+        const newMsg = {
+          id: `msg-${Date.now()}`,
+          sender: currentUser.name,
+          text: text.trim(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isMe: true
+        };
+        setConversations(prev => prev.map(conv => {
+          if (conv.id === convId) {
+            return {
+              ...conv,
+              lastMessage: text.trim(),
+              lastTime: 'Just now',
+              messages: [...conv.messages, newMsg]
+            };
+          }
+          return conv;
+        }));
+      };
+
+      const addReview = (reviewData) => {
+        const newRev = {
+          id: `rev-${Date.now()}`,
+          author: currentUser.name,
+          authorAvatar: currentUser.avatar,
+          authorDept: `${currentUser.department} - ${currentUser.year}`,
+          rating: reviewData.rating || 5,
+          date: 'Just now',
+          skill: reviewData.skill || 'Peer Barter',
+          comment: reviewData.comment,
+          tags: reviewData.tags || ['Helpful', 'Knowledgeable']
+        };
+        setReviews(prev => [newRev, ...prev]);
+        showToast('Review Submitted! ⭐', 'Thank you for building campus reputation trust.', 'success');
+      };
+
+      const viewStudentProfile = (student) => {
+        setSelectedStudent(student);
+        setActiveTab('profile');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const openRequestModal = (student) => {
+        setRequestModalStudent(student);
+      };
+
+      const navigateTo = (tabName, filterSkill = '') => {
+        setActiveTab(tabName);
+        if (filterSkill) setSearchSkillFilter(filterSkill);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      return (
+        <ExchangeContext.Provider value={{
+          activeTab, setActiveTab, navigateTo,
+          isAuthenticated, setIsAuthenticated, isAdmin, setIsAdmin,
+          currentUser, setCurrentUser, students,
+          selectedStudent, setSelectedStudent, viewStudentProfile,
+          requestModalStudent, setRequestModalStudent, openRequestModal,
+          searchSkillFilter, setSearchSkillFilter,
+          requests, sendExchangeRequest, acceptRequest, rejectRequest,
+          conversations, activeConvId, setActiveConvId, sendMessage,
+          reviews, addReview, toasts, showToast, removeToast
+        }}>
+          {children}
+        </ExchangeContext.Provider>
+      );
+    };
+
+    const useExchange = () => useContext(ExchangeContext);
+
+    // ==========================================
+    // 4. COMMON REUSABLE UI COMPONENTS
+    // ==========================================
+
+    // Toast Container
+    const ToastContainer = () => {
+      const { toasts, removeToast } = useExchange();
+      if (!toasts.length) return null;
+      return (
+        <div className="fixed bottom-5 right-5 z-50 flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
+          {toasts.map(toast => (
+            <div key={toast.id} className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200 shadow-soft-xl rounded-2xl p-4 flex items-start space-x-3 transition-all">
+              <div className={`p-2 rounded-xl flex-shrink-0 ${
+                toast.type === 'success' ? 'bg-emerald-50 text-emerald-600' :
+                toast.type === 'info' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+              }`}>
+                {toast.type === 'success' ? <Icon name="CheckCircle2" className="w-5 h-5" /> :
+                 toast.type === 'info' ? <Icon name="Sparkles" className="w-5 h-5" /> :
+                 <Icon name="AlertCircle" className="w-5 h-5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 leading-tight">{toast.title}</h4>
+                {toast.message && <p className="text-xs text-slate-600 mt-1 leading-relaxed">{toast.message}</p>}
+              </div>
+              <button onClick={() => removeToast(toast.id)} className="text-slate-400 hover:text-slate-600 p-1">
+                <Icon name="X" className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    // Top Navbar
+    const Navbar = () => {
+      const { activeTab, navigateTo, currentUser, requests, conversations, isAdmin, setIsAdmin, isAuthenticated, setIsAuthenticated } = useExchange();
+      const [profileOpen, setProfileOpen] = useState(false);
+      const [mobileMenu, setMobileMenu] = useState(false);
+
+      const pendingCount = requests.filter(r => r.type === 'incoming' && r.status === 'pending').length;
+      const unreadCount = conversations.reduce((acc, c) => acc + (c.unread || 0), 0);
+
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'Compass' },
+        { id: 'explore', label: 'Explore Skills', icon: 'BookOpen' },
+        { id: 'students', label: 'Find Students', icon: 'Users' },
+        { id: 'recommendations', label: 'Smart Matches', icon: 'Sparkles', badge: 'AI' },
+        { id: 'requests', label: 'Requests', icon: 'ArrowRightLeft', count: pendingCount },
+        { id: 'messages', label: 'Messages', icon: 'MessageSquare', count: unreadCount }
+      ];
+
+      return (
+        <header className="sticky top-0 z-40 transition-all" style={{background:'rgba(10,9,40,0.72)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', borderBottom:'1px solid rgba(99,102,241,0.18)'}}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
+              
+              {/* Brand Logo */}
+              <div className="flex items-center space-x-3 cursor-pointer select-none" onClick={() => navigateTo('landing')}>
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-glow">
+                  <Icon name="ArrowRightLeft" className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white">
+                      Skill<span className="text-indigo-400">Bridge</span>
+                    </span>
+                    <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 border border-brand-200 rounded-full">
+                      Campus
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium hidden sm:block">Student Skill Exchange Platform</p>
+                </div>
+              </div>
+
+              {/* Desktop Nav Links */}
+              <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+                {navItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigateTo(item.id)}
+                      className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        isActive
+                          ? 'bg-brand-50 text-brand-600 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Icon name={item.icon} className={`w-4 h-4 ${isActive ? 'text-brand-600' : 'text-slate-500'}`} />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.2 text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.count > 0 && (
+                        <span className="w-5 h-5 flex items-center justify-center text-[10px] font-extrabold bg-brand-600 text-white rounded-full">
+                          {item.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Right Area */}
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <button
+                  onClick={() => navigateTo('dashboard-login')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center space-x-1.5 ${
+                    activeTab === 'dashboard-login'
+                      ? 'bg-brand-600 text-white border-brand-600'
+                      : 'bg-brand-50 text-brand-700 border-brand-200 hover:bg-brand-100'
+                  }`}
+                >
+                  <Icon name="User" className="w-3.5 h-3.5" />
+                  <span>Portal Login</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (activeTab === 'admin') {
+                      navigateTo('dashboard');
+                      setIsAdmin(false);
+                    } else {
+                      navigateTo('admin');
+                      setIsAdmin(true);
+                    }
+                  }}
+                  className={`hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    activeTab === 'admin'
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:text-purple-700'
+                  }`}
+                >
+                  <Icon name="Shield" className="w-3.5 h-3.5" />
+                  <span>{activeTab === 'admin' ? 'Exit Admin' : 'Admin Panel'}</span>
+                </button>
+
+                {isAuthenticated ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setProfileOpen(!profileOpen)}
+                      className="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl border border-slate-200 bg-white hover:border-brand-300 transition-all shadow-sm"
+                    >
+                      <img src={currentUser.avatar} alt={currentUser.name} className="w-8 h-8 rounded-xl object-cover ring-2 ring-brand-100" />
+                      <div className="hidden lg:block text-left">
+                        <p className="text-xs font-bold text-slate-800 leading-tight">{currentUser.name}</p>
+                        <div className="flex items-center space-x-1">
+                          <Icon name="Star" className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          <span className="text-[11px] font-semibold text-slate-500">{currentUser.reputationScore}</span>
+                        </div>
+                      </div>
+                      <Icon name="ChevronDown" className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+
+                    {profileOpen && (
+                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-soft-xl border border-slate-200 p-2 z-50">
+                        <div className="px-3 py-2 border-b border-slate-100">
+                          <p className="text-sm font-bold text-slate-900">{currentUser.name}</p>
+                          <p className="text-xs text-slate-500">{currentUser.department}</p>
+                        </div>
+                        <div className="py-1">
+                          <button
+                            onClick={() => { setProfileOpen(false); navigateTo('profile'); }}
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 rounded-xl"
+                          >
+                            <Icon name="User" className="w-4 h-4" />
+                            <span>My Profile</span>
+                          </button>
+                          <button
+                            onClick={() => { setProfileOpen(false); navigateTo('reputation'); }}
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 rounded-xl"
+                          >
+                            <Icon name="Award" className="w-4 h-4" />
+                            <span>Reputation</span>
+                          </button>
+                          <button
+                            onClick={() => { setProfileOpen(false); navigateTo('admin'); }}
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-50 rounded-xl"
+                          >
+                            <Icon name="Shield" className="w-4 h-4" />
+                            <span>Admin Console</span>
+                          </button>
+                        </div>
+                        <div className="border-t border-slate-100 pt-1">
+                          <button
+                            onClick={() => { setProfileOpen(false); setIsAuthenticated(false); navigateTo('dashboard-login'); }}
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl"
+                          >
+                            <Icon name="LogOut" className="w-4 h-4" />
+                            <span>Sign Out / Portal Login</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button onClick={() => navigateTo('dashboard-login')} className="px-4 py-2 text-xs font-bold text-white bg-brand-600 rounded-xl shadow-soft">
+                    Dashboard Login
+                  </button>
+                )}
+
+                <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
+                  <Icon name={mobileMenu ? "X" : "Menu"} className="w-6 h-6" />
+                </button>
+              </div>
+
+            </div>
+
+            {/* Mobile Nav */}
+            {mobileMenu && (
+              <div className="md:hidden py-4 border-t border-slate-200 bg-white">
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => { navigateTo(item.id); setMobileMenu(false); }}
+                      className={`flex items-center space-x-2 p-2.5 rounded-xl text-xs font-bold ${
+                        activeTab === item.id ? 'bg-brand-50 text-brand-600' : 'text-slate-700'
+                      }`}
+                    >
+                      <Icon name={item.icon} className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <button
+                    onClick={() => { navigateTo('dashboard-login'); setMobileMenu(false); }}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-xs font-bold"
+                  >
+                    <Icon name="User" className="w-3.5 h-3.5" />
+                    <span>Dashboard Sign In</span>
+                  </button>
+                  <button
+                    onClick={() => { navigateTo('admin'); setMobileMenu(false); }}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 text-xs font-bold"
+                  >
+                    <Icon name="Shield" className="w-3.5 h-3.5" />
+                    <span>Admin</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </header>
+      );
+    };
+
+    // Sidebar
+    const Sidebar = () => {
+      const { activeTab, navigateTo, currentUser, requests, conversations } = useExchange();
+      const pendingCount = requests.filter(r => r.type === 'incoming' && r.status === 'pending').length;
+      const unreadCount = conversations.reduce((acc, c) => acc + (c.unread || 0), 0);
+
+      const items = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'Compass' },
+        { id: 'explore', label: 'Explore Skills', icon: 'BookOpen' },
+        { id: 'students', label: 'Find Students', icon: 'Users' },
+        { id: 'recommendations', label: 'Smart Matches', icon: 'Sparkles', badge: 'Match' },
+        { id: 'requests', label: 'Requests', icon: 'ArrowRightLeft', count: pendingCount },
+        { id: 'messages', label: 'Messages', icon: 'MessageSquare', count: unreadCount },
+        { id: 'reputation', label: 'Reputation & Ratings', icon: 'Award' },
+        { id: 'profile', label: 'My Profile', icon: 'User' },
+      ];
+
+      return (
+        <aside className="w-64 min-h-[calc(100vh-5rem)] flex flex-col justify-between p-4 flex-shrink-0 hidden lg:flex" style={{background:'rgba(10,9,40,0.60)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderRight:'1px solid rgba(99,102,241,0.15)'}}>
+          <div>
+            <div
+              onClick={() => navigateTo('profile')}
+              className="p-3 mb-5 rounded-2xl cursor-pointer transition-all group" style={{background:'rgba(99,102,241,0.12)', border:'1px solid rgba(99,102,241,0.25)'}}
+            >
+              <div className="flex items-center space-x-3">
+                <img src={currentUser.avatar} alt={currentUser.name} className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-sm" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-white truncate group-hover:text-indigo-300">{currentUser.name}</h4>
+                  <p className="text-[11px] text-indigo-300/70 truncate">{currentUser.department}</p>
+                  <div className="flex items-center space-x-1 mt-0.5">
+                    <Icon name="Star" className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <span className="text-xs font-bold text-white">{currentUser.reputationScore}</span>
+                    <span className="text-[10px] text-indigo-300/60">({currentUser.totalExchanges} swaps)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="px-3 text-[11px] font-bold text-indigo-300/60 uppercase tracking-wider mb-2">Platform Navigation</p>
+              {items.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => navigateTo(item.id)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all`}
+                    style={isActive ? {background:'linear-gradient(135deg, rgba(99,102,241,0.9), rgba(139,92,246,0.8))', color:'white', boxShadow:'0 4px 15px rgba(99,102,241,0.4)'} : {color:'rgba(199,210,254,0.8)'}}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon name={item.icon} className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-400'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.count > 0 && (
+                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                        isActive ? 'bg-white text-brand-700' : 'bg-brand-600 text-white'
+                      }`}>
+                        {item.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-4" style={{borderTop:'1px solid rgba(99,102,241,0.2)'}}>
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-indigo-900 to-brand-950 text-white shadow-soft">
+              <span className="text-[11px] font-bold text-brand-200 uppercase tracking-wider block mb-1">Campus Exchange</span>
+              <p className="text-xs text-slate-200">Connect with peers to barter knowledge without spending money.</p>
+              <button
+                onClick={() => navigateTo('recommendations')}
+                className="mt-2.5 w-full py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition-all"
+              >
+                View Mutual Matches →
+              </button>
+            </div>
+          </div>
+        </aside>
+      );
+    };
+
+    // Mobile Bottom Nav
+    const BottomNav = () => {
+      const { activeTab, navigateTo, requests, conversations } = useExchange();
+      const pendingCount = requests.filter(r => r.type === 'incoming' && r.status === 'pending').length;
+      const unreadCount = conversations.reduce((acc, c) => acc + (c.unread || 0), 0);
+
+      const items = [
+        { id: 'dashboard', label: 'Home', icon: 'Compass' },
+        { id: 'explore', label: 'Skills', icon: 'BookOpen' },
+        { id: 'students', label: 'Peers', icon: 'Users' },
+        { id: 'requests', label: 'Requests', icon: 'ArrowRightLeft', count: pendingCount },
+        { id: 'messages', label: 'Chats', icon: 'MessageSquare', count: unreadCount },
+      ];
+
+      return (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 px-2 py-1.5 flex items-center justify-around md:hidden shadow-2xl" style={{background:'rgba(10,9,40,0.85)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', borderTop:'1px solid rgba(99,102,241,0.2)'}}>
+          {items.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigateTo(item.id)}
+                className={`flex flex-col items-center justify-center py-1 px-3 ${isActive ? 'text-indigo-400 font-bold' : 'text-indigo-200/50'}`}
+              >
+                <div className="relative">
+                  <Icon name={item.icon} className="w-5 h-5" />
+                  {item.count > 0 && (
+                    <span className="absolute -top-1 -right-2 px-1 text-[9px] font-bold bg-brand-600 text-white rounded-full">
+                      {item.count}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] mt-0.5">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      );
+    };
+
+    // Card: StudentCard
+    const StudentCard = ({ student, onOpenRequest, onViewProfile }) => {
+      const { viewStudentProfile, openRequestModal } = useExchange();
+
+      return (
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 hover:border-brand-200 shadow-soft hover:shadow-soft-lg transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center space-x-3.5">
+                <div className="relative">
+                  <img src={student.avatar} alt={student.name} className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover ring-2 ring-slate-100 shadow-sm" />
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-extrabold text-base sm:text-lg text-slate-900 group-hover:text-brand-600 transition-colors">
+                      {student.name}
+                    </h3>
+                    {student.badge && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-md">
+                        {student.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    {student.department} • <span className="font-semibold text-slate-600">{student.year}</span>
+                  </p>
+                  <div className="flex items-center space-x-1.5 mt-1">
+                    <div className="flex items-center text-amber-500">
+                      <Icon name="Star" className="w-3.5 h-3.5 fill-amber-500" />
+                      <span className="text-xs font-extrabold ml-1 text-slate-800">{student.rating}</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400">({student.reviewsCount} reviews)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-2.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full text-xs font-black shadow-sm">
+                {student.matchPercentage}% Match
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4 line-clamp-2">
+              {student.bio}
+            </p>
+
+            <div className="space-y-2.5 pt-3 border-t border-slate-100 mb-5">
+              <div>
+                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block mb-1">
+                  Can Teach:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {student.canTeach.map((s, idx) => (
+                    <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-lg">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider block mb-1">
+                  Wants to Learn:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {student.wantsToLearn.map((s, idx) => (
+                    <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200/60 rounded-lg">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+            <button
+              onClick={() => viewStudentProfile(student)}
+              className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1"
+            >
+              <Icon name="Eye" className="w-3.5 h-3.5 text-slate-500" />
+              <span>View Profile</span>
+            </button>
+            <button
+              onClick={() => openRequestModal(student)}
+              className="py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-soft flex items-center justify-center space-x-1"
+            >
+              <Icon name="ArrowRightLeft" className="w-3.5 h-3.5" />
+              <span>Send Request</span>
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Card: SkillCard
+    const SkillCard = ({ skill, onExplore }) => {
+      const { navigateTo } = useExchange();
+      return (
+        <div className="bg-white rounded-3xl p-5 border border-slate-200 hover:border-brand-200 shadow-soft hover:shadow-soft-lg transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${skill.color || 'from-brand-500 to-indigo-600'} flex items-center justify-center text-white shadow-md`}>
+                <Icon name={skill.icon || 'Code'} className="w-6 h-6" />
+              </div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
+                {skill.category}
+              </span>
+            </div>
+
+            <h3 className="text-base font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors">
+              {skill.name}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
+              {skill.description}
+            </p>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Students Sharing</span>
+                <span className="font-extrabold text-slate-800">{skill.studentsCount} students</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-brand-600 rounded-full" style={{ width: `${skill.popularity}%` }}></div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onExplore ? onExplore(skill.name) : navigateTo('students', skill.name)}
+            className="mt-5 w-full py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-brand-600 text-slate-700 hover:text-white text-xs font-bold border border-slate-200 hover:border-brand-600 transition-all flex items-center justify-center space-x-1.5"
+          >
+            <span>Explore Students</span>
+            <Icon name="ChevronRight" className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      );
+    };
+
+    // Card: RecommendationCard
+    const RecommendationCard = ({ student, onOpenRequest }) => {
+      const { openRequestModal, viewStudentProfile } = useExchange();
+      const highlight = student.mutualMatchHighlight || {
+        youTeach: "Java",
+        theyTeach: "Python",
+        matchScore: 92,
+        commonInterests: ["Web Development", "Hackathons"]
+      };
+
+      return (
+        <div className="bg-white rounded-3xl p-6 border border-brand-100 hover:border-brand-300 shadow-soft hover:shadow-soft-xl transition-all flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center space-x-3.5">
+                <img
+                  src={student.avatar}
+                  alt={student.name}
+                  onClick={() => viewStudentProfile(student)}
+                  className="w-14 h-14 rounded-2xl object-cover ring-2 ring-brand-100 cursor-pointer"
+                />
+                <div>
+                  <h3
+                    onClick={() => viewStudentProfile(student)}
+                    className="font-extrabold text-lg text-slate-900 hover:text-brand-600 cursor-pointer"
+                  >
+                    {student.name}
+                  </h3>
+                  <p className="text-xs font-medium text-slate-500">
+                    {student.department} • <span className="font-semibold text-slate-600">{student.year}</span>
+                  </p>
+                  <div className="flex items-center space-x-1 mt-1 text-xs">
+                    <Icon name="Star" className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span className="font-bold text-slate-800">{student.rating}</span>
+                    <span className="text-slate-400">({student.reviewsCount} reviews)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-3 py-1.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl text-xs font-black shadow-glow">
+                {highlight.matchScore}% Skill Match
+              </div>
+            </div>
+
+            <div className="my-4 p-4 rounded-2xl bg-gradient-to-r from-slate-50 via-brand-50/40 to-slate-50 border border-brand-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center relative">
+                <div className="p-3 bg-white rounded-xl border border-emerald-100 shadow-xs">
+                  <span className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider block mb-1">
+                    You can teach them
+                  </span>
+                  <p className="text-sm font-black text-slate-900">{highlight.youTeach}</p>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-xs">
+                  <span className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider block mb-1">
+                    They can teach you
+                  </span>
+                  <p className="text-sm font-black text-slate-900">{highlight.theyTeach}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center flex-wrap gap-1.5 mb-2 text-xs">
+              <span className="text-[11px] font-bold text-slate-400">Common:</span>
+              {highlight.commonInterests?.map((item, i) => (
+                <span key={i} className="px-2 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-700 rounded-md">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex items-center space-x-2">
+            <button
+              onClick={() => viewStudentProfile(student)}
+              className="py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            >
+              Profile
+            </button>
+            <button
+              onClick={() => onOpenRequest ? onOpenRequest(student) : openRequestModal(student)}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs font-bold shadow-soft hover:shadow-glow flex items-center justify-center space-x-2"
+            >
+              <Icon name="ArrowRightLeft" className="w-4 h-4 text-amber-300" />
+              <span>Send Exchange Request</span>
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Card: RequestCard
+    const RequestCard = ({ request, onAccept, onReject }) => {
+      const { acceptRequest, rejectRequest, navigateTo, setActiveConvId, conversations } = useExchange();
+      const isIncoming = request.type === 'incoming';
+      const isAccepted = request.status === 'accepted';
+      const isCompleted = request.status === 'completed';
+
+      return (
+        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-soft flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center space-x-3.5">
+                <img src={request.student.avatar} alt={request.student.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-100" />
+                <div>
+                  <h4 className="font-extrabold text-base text-slate-900">{request.student.name}</h4>
+                  <p className="text-xs text-slate-500">{request.student.department} • {request.student.year}</p>
+                </div>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                isAccepted ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                isCompleted ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-brand-50 text-brand-700 border border-brand-200'
+              }`}>
+                {request.status}
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 mb-4 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">
+                  {isIncoming ? 'They Want to Learn' : 'You Requested'}
+                </span>
+                <span className="font-extrabold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                  {request.requestedSkill}
+                </span>
+              </div>
+              <Icon name="ArrowRightLeft" className="w-4 h-4 text-brand-600 mx-2" />
+              <div className="text-right">
+                <span className="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">
+                  {isIncoming ? 'They Can Offer' : 'You Offered'}
+                </span>
+                <span className="font-extrabold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                  {request.offeredSkill}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 italic bg-white p-3 rounded-xl border border-slate-100 shadow-xs mb-4">
+              "{request.message}"
+            </p>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100">
+            {isIncoming && request.status === 'pending' && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onReject ? onReject(request.id) : rejectRequest(request.id)}
+                  className="py-2 px-3 rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-bold"
+                >
+                  Decline
+                </button>
+                <button
+                  onClick={() => onAccept ? onAccept(request.id) : acceptRequest(request.id)}
+                  className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs"
+                >
+                  Accept Swap
+                </button>
+              </div>
+            )}
+
+            {isAccepted && (
+              <button
+                onClick={() => {
+                  const conv = conversations.find(c => c.partnerId === request.student.id);
+                  if (conv) setActiveConvId(conv.id);
+                  navigateTo('messages');
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-soft flex items-center justify-center space-x-1.5"
+              >
+                <Icon name="MessageSquare" className="w-4 h-4" />
+                <span>Open Chat & Coordinate</span>
+              </button>
+            )}
+
+            {isCompleted && (
+              <span className="text-xs text-emerald-600 font-bold flex items-center justify-center space-x-1">
+                <Icon name="CheckCircle2" className="w-4 h-4" />
+                <span>Completed Session ★ 5.0 Rating</span>
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // Card: RatingCard
+    const RatingCard = ({ review }) => {
+      return (
+        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-soft">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center space-x-3">
+              <img src={review.authorAvatar} alt={review.author} className="w-10 h-10 rounded-xl object-cover" />
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900">{review.author}</h4>
+                <p className="text-[11px] text-slate-500">{review.authorDept}</p>
+              </div>
+            </div>
+            <div className="flex items-center text-amber-500 text-xs font-black">
+              {[...Array(5)].map((_, i) => (
+                <Icon key={i} name="Star" className="w-3.5 h-3.5 fill-amber-500" />
+              ))}
+              <span className="ml-1 text-slate-800">{review.rating}</span>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-md inline-block mb-2">
+            Topic: {review.skill}
+          </span>
+          <p className="text-xs text-slate-600 leading-relaxed">{review.comment}</p>
+        </div>
+      );
+    };
+
+    // Modal: SendRequestModal
+    const SendRequestModal = () => {
+      const { requestModalStudent, setRequestModalStudent, currentUser, sendExchangeRequest } = useExchange();
+      if (!requestModalStudent) return null;
+
+      const [requestedSkill, setRequestedSkill] = useState(requestModalStudent.canTeach?.[0] || 'Programming');
+      const [offeredSkill, setOfferedSkill] = useState(currentUser.skillsCanTeach?.[0]?.name || 'Web Development');
+      const [message, setMessage] = useState(`Hi ${requestModalStudent.name}! I'd love to learn ${requestedSkill} from you. In return, I can teach you ${offeredSkill} and help with practical projects.`);
+      const [slot, setSlot] = useState('This Thursday at 4:30 PM (Campus Library)');
+
+      const handleSend = (e) => {
+        e.preventDefault();
+        sendExchangeRequest({
+          student: requestModalStudent,
+          requestedSkill,
+          offeredSkill,
+          message,
+          proposedSlot: slot
+        });
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-soft-xl border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setRequestModalStudent(null)} className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700">
+              <Icon name="X" className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3.5 mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-soft">
+                <Icon name="ArrowRightLeft" className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">Propose Skill Exchange</h3>
+                <p className="text-xs text-slate-500">Mutual peer learning with {requestModalStudent.name}</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 mb-5 flex items-center space-x-3">
+              <img src={requestModalStudent.avatar} alt={requestModalStudent.name} className="w-11 h-11 rounded-xl object-cover" />
+              <div className="flex-1 min-w-0">
+                <span className="font-bold text-sm text-slate-900 block">{requestModalStudent.name}</span>
+                <span className="text-xs text-slate-500">{requestModalStudent.department} • {requestModalStudent.year}</span>
+              </div>
+              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200">
+                {requestModalStudent.matchPercentage}% Match
+              </span>
+            </div>
+
+            <form onSubmit={handleSend} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  1. Skill you want to learn:
+                </label>
+                <select
+                  value={requestedSkill}
+                  onChange={(e) => {
+                    setRequestedSkill(e.target.value);
+                    setMessage(`Hi ${requestModalStudent.name}! I'd love to learn ${e.target.value} from you. In return, I can teach you ${offeredSkill} and help with practical projects.`);
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none"
+                >
+                  {requestModalStudent.canTeach?.map((s, i) => (
+                    <option key={i} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  2. Skill you offer in return:
+                </label>
+                <select
+                  value={offeredSkill}
+                  onChange={(e) => {
+                    setOfferedSkill(e.target.value);
+                    setMessage(`Hi ${requestModalStudent.name}! I'd love to learn ${requestedSkill} from you. In return, I can teach you ${e.target.value} and help with practical projects.`);
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none"
+                >
+                  {currentUser.skillsCanTeach?.map((s, i) => (
+                    <option key={i} value={s.name}>{s.name} ({s.level})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Proposed Time & Location
+                </label>
+                <input
+                  type="text"
+                  value={slot}
+                  onChange={(e) => setSlot(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Personalized Proposal Message
+                </label>
+                <textarea
+                  rows="3"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-slate-200 text-xs outline-none"
+                  required
+                ></textarea>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRequestModalStudent(null)}
+                  className="w-1/3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-2/3 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-soft flex items-center justify-center space-x-2"
+                >
+                  <Icon name="Send" className="w-4 h-4" />
+                  <span>Send Proposal</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // Modal: StudentDetailModal
+    const StudentDetailModal = () => {
+      const { selectedStudent, setSelectedStudent, openRequestModal, navigateTo } = useExchange();
+      if (!selectedStudent) return null;
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-soft-xl border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setSelectedStudent(null)} className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700">
+              <Icon name="X" className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-start space-x-4 mb-6">
+              <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-16 h-16 rounded-2xl object-cover ring-4 ring-brand-100" />
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-900">{selectedStudent.name}</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">{selectedStudent.department} • {selectedStudent.year}</p>
+                <div className="flex items-center space-x-2 mt-2 text-xs">
+                  <div className="flex items-center text-amber-500 font-bold">
+                    <Icon name="Star" className="w-4 h-4 fill-amber-500 mr-1" />
+                    <span>{selectedStudent.rating}</span>
+                  </div>
+                  <span className="text-slate-400">({selectedStudent.reviewsCount} reviews)</span>
+                  <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                    {selectedStudent.matchPercentage}% Match
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 italic">
+              "{selectedStudent.bio}"
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider block mb-2">
+                  Can Teach
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStudent.canTeach?.map((s, i) => (
+                    <span key={i} className="text-xs font-bold px-2 py-1 bg-white text-emerald-900 rounded-lg border border-emerald-200">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+                <span className="text-xs font-extrabold text-indigo-800 uppercase tracking-wider block mb-2">
+                  Wants to Learn
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStudent.wantsToLearn?.map((s, i) => (
+                    <span key={i} className="text-xs font-bold px-2 py-1 bg-white text-indigo-900 rounded-lg border border-indigo-200">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => { navigateTo('profile'); setSelectedStudent(null); }}
+                className="w-1/3 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-700"
+              >
+                Full Profile
+              </button>
+              <button
+                onClick={() => { const s = selectedStudent; setSelectedStudent(null); openRequestModal(s); }}
+                className="w-2/3 py-3 rounded-xl bg-brand-600 text-white text-xs font-bold shadow-soft flex items-center justify-center space-x-2"
+              >
+                <Icon name="ArrowRightLeft" className="w-4 h-4" />
+                <span>Send Exchange Proposal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 5. VIEW 1: LANDING PAGE
+    // ==========================================
+    const LandingPage = () => {
+      const { navigateTo } = useExchange();
+      const [isSwapped, setIsSwapped] = useState(false);
+
+      return (
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+          
+          {/* Hero */}
+          <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 bg-gradient-to-b from-brand-50/60 via-white to-slate-50 border-b border-slate-200/60">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                
+                <div className="lg:col-span-7 text-center lg:text-left">
+                  <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-100 border border-brand-200 text-brand-800 text-xs font-bold mb-6">
+                    <Icon name="Sparkles" className="w-4 h-4 text-brand-600" />
+                    <span>Campus Peer Learning Barter Network</span>
+                  </div>
+
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-6">
+                    Learn. Share. <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600">
+                      Grow Together.
+                    </span>
+                  </h1>
+
+                  <p className="text-lg sm:text-xl text-slate-600 font-medium max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+                    Exchange skills with fellow students and build a smarter learning community.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                    <button
+                      onClick={() => navigateTo('explore')}
+                      className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-base shadow-soft-lg flex items-center justify-center space-x-2.5"
+                    >
+                      <Icon name="Search" className="w-5 h-5 text-indigo-200" />
+                      <span>Find a Skill</span>
+                      <Icon name="ChevronRight" className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => navigateTo('dashboard')}
+                      className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-base border border-slate-300 shadow-soft flex items-center justify-center space-x-2.5"
+                    >
+                      <Icon name="ArrowRightLeft" className="w-5 h-5 text-brand-600" />
+                      <span>Share Your Skill</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-10 pt-8 border-t border-slate-200 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-slate-900">1,400+</p>
+                      <p className="text-xs font-semibold text-slate-500">Students</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-brand-600">340+</p>
+                      <p className="text-xs font-semibold text-slate-500">Active Swaps</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-black text-emerald-600">4.9/5</p>
+                      <p className="text-xs font-semibold text-slate-500">Peer Rating</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Illustration / Live Simulation */}
+                <div className="lg:col-span-5">
+                  <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-soft-xl">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Live Barter Simulation</span>
+                      </div>
+                      <span className="px-2.5 py-0.5 text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                        95% Match
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80" alt="Rahul" className="w-12 h-12 rounded-xl object-cover ring-2 ring-brand-300" />
+                        <div>
+                          <h4 className="text-sm font-extrabold text-slate-900">Rahul (IT, 2nd Yr)</h4>
+                          <span className="text-xs text-emerald-700 font-bold">Offers: Java & C</span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-brand-600 bg-white px-2 py-1 rounded-lg">★ 4.9</span>
+                    </div>
+
+                    <div className="py-4 flex items-center justify-center relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t-2 border-dashed border-brand-200"></div>
+                      </div>
+                      <button
+                        onClick={() => { setIsSwapped(true); setTimeout(() => setIsSwapped(false), 1000); }}
+                        className={`relative z-10 p-3 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-glow transition-all duration-300 ${isSwapped ? 'rotate-180 scale-110' : ''}`}
+                      >
+                        <Icon name="ArrowRightLeft" className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80" alt="Priya" className="w-12 h-12 rounded-xl object-cover ring-2 ring-purple-300" />
+                        <div>
+                          <h4 className="text-sm font-extrabold text-slate-900">Priya (CSE, 3rd Yr)</h4>
+                          <span className="text-xs text-indigo-700 font-bold">Offers: Python & UI/UX</span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-purple-600 bg-white px-2 py-1 rounded-lg">★ 5.0</span>
+                    </div>
+
+                    <div className="mt-5 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-600">Zero Financial Cost • 100% Peer Barter</span>
+                      <button onClick={() => navigateTo('recommendations')} className="font-bold text-brand-600 hover:underline">
+                        Test Matching →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* How it works */}
+          <section className="py-16 bg-white border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">How It Works</h2>
+              <p className="text-sm text-slate-500 max-w-xl mx-auto mb-12">Exchange skills in three effortless steps with no payments required.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white font-black text-lg flex items-center justify-center mx-auto mb-4">01</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">List What You Can Teach</h3>
+                  <p className="text-xs text-slate-600">Share your strengths, from coding languages to presentation and design skills.</p>
+                </div>
+                <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-black text-lg flex items-center justify-center mx-auto mb-4">02</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Discover Mutual Matches</h3>
+                  <p className="text-xs text-slate-600">Our engine finds students who offer what you want to learn and vice versa.</p>
+                </div>
+                <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white font-black text-lg flex items-center justify-center mx-auto mb-4">03</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Exchange & Level Up</h3>
+                  <p className="text-xs text-slate-600">Send an exchange request, chat, schedule sessions, and rate each other's sessions.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Popular Skills */}
+          <section className="py-16 bg-slate-50 border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">Popular Skills</h2>
+                  <p className="text-xs text-slate-500">Trending topics students are sharing today</p>
+                </div>
+                <button onClick={() => navigateTo('explore')} className="text-xs font-bold text-brand-600 hover:underline">
+                  View All Skills →
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {SKILLS_LIST.slice(0, 4).map(skill => (
+                  <SkillCard key={skill.id} skill={skill} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Featured Students */}
+          <section className="py-16 bg-white border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">Featured Students</h2>
+                  <p className="text-xs text-slate-500">Top-rated peer mentors on campus</p>
+                </div>
+                <button onClick={() => navigateTo('students')} className="text-xs font-bold text-brand-600 hover:underline">
+                  Find More Students →
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {STUDENTS_DATA.slice(0, 3).map(student => (
+                  <StudentCard key={student.id} student={student} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonials */}
+          <section className="py-16 bg-slate-50 border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-black text-slate-900 text-center mb-8">What Students Say</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {TESTIMONIALS.map((t, idx) => (
+                  <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft flex flex-col justify-between">
+                    <p className="text-xs text-slate-600 italic mb-4 leading-relaxed">"{t.quote}"</p>
+                    <div className="flex items-center space-x-3 pt-3 border-t border-slate-100">
+                      <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-xl object-cover" />
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-900">{t.name}</h4>
+                        <p className="text-[10px] text-slate-400">{t.department}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Banner */}
+          <section className="py-16 bg-gradient-to-r from-brand-900 via-indigo-950 to-brand-950 text-white text-center">
+            <div className="max-w-4xl mx-auto px-4">
+              <h2 className="text-3xl font-black mb-4">Start Exchanging Skills Today</h2>
+              <p className="text-sm text-slate-300 mb-8 max-w-xl mx-auto">
+                Join your campus peers and start learning the tools you need for hackathons, coursework, and careers.
+              </p>
+              <button
+                onClick={() => navigateTo('login')}
+                className="px-8 py-4 bg-white text-brand-900 font-extrabold text-sm rounded-2xl shadow-soft hover:bg-brand-50"
+              >
+                Create Free Student Account
+              </button>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="bg-slate-900 text-slate-400 py-10 text-xs border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-2 text-white font-bold text-sm">
+                <Icon name="ArrowRightLeft" className="w-4 h-4 text-brand-400" />
+                <span>SkillBridge Campus Exchange</span>
+              </div>
+              <p className="text-slate-500">© 2026 Student Skill Exchange Platform. All rights reserved.</p>
+            </div>
+          </footer>
+
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 6. VIEW 2: AUTH PAGE
+    // ==========================================
+    const AuthPage = () => {
+      const { navigateTo, setIsAuthenticated, setCurrentUser, showToast } = useExchange();
+      const [mode, setMode] = useState('signup');
+      const [name, setName] = useState('Alex Johnson');
+      const [email, setEmail] = useState('alex.johnson@campus.edu');
+      const [department, setDepartment] = useState('Information Technology');
+      const [year, setYear] = useState('2nd Year');
+      const [canTeach, setCanTeach] = useState(["Java", "Web Development", "C Programming"]);
+      const [wantLearn, setWantLearn] = useState(["Python", "UI/UX Design"]);
+
+      const SUGGESTED = ["Java", "Python", "Web Development", "UI/UX Design", "Machine Learning", "C Programming", "Arduino & IoT", "Agriculture Tech"];
+
+      const toggleTeach = (s) => {
+        setCanTeach(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+      };
+      const toggleLearn = (s) => {
+        setWantLearn(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setIsAuthenticated(true);
+        setCurrentUser(prev => ({
+          ...prev,
+          name: name || prev.name,
+          email: email || prev.email,
+          department: department || prev.department,
+          year: year || prev.year,
+          skillsCanTeach: canTeach.map(s => ({ name: s, level: "Intermediate", endorsements: 5, category: "Skills" })),
+          skillsWantToLearn: wantLearn.map(s => ({ name: s, priority: "High", category: "Skills" }))
+        }));
+        showToast('Welcome to SkillBridge! 👋', `Logged in as ${name}.`, 'success');
+        navigateTo('dashboard');
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col justify-center">
+          <div className="max-w-lg w-full mx-auto">
+            
+            <div className="text-center mb-8">
+              <div onClick={() => navigateTo('landing')} className="inline-flex items-center space-x-2 cursor-pointer mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-brand-600 flex items-center justify-center text-white">
+                  <Icon name="ArrowRightLeft" className="w-5 h-5" />
+                </div>
+                <span className="font-extrabold text-2xl text-slate-900">SkillBridge</span>
+              </div>
+              <h2 className="text-xl font-black text-slate-900">{mode === 'signup' ? 'Create Student Account' : 'Log In to Campus'}</h2>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-soft-xl border border-slate-200">
+              <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+                <button
+                  type="button"
+                  onClick={() => setMode('signup')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg ${mode === 'signup' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500'}`}
+                >
+                  Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg ${mode === 'login' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500'}`}
+                >
+                  Log In
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Full Name</label>
+                  <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Campus Email</label>
+                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Department</label>
+                    <select value={department} onChange={e => setDepartment(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none">
+                      <option value="Information Technology">Information Technology</option>
+                      <option value="Computer Science">Computer Science</option>
+                      <option value="AI & Data Science">AI & Data Science</option>
+                      <option value="Electronics & Comm">Electronics & Comm</option>
+                      <option value="Agriculture Tech">Agriculture Tech</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Year</label>
+                    <select value={year} onChange={e => setYear(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none">
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Skills Can Teach */}
+                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-100">
+                  <span className="text-xs font-extrabold text-emerald-800 uppercase block mb-1.5">Skills I Can Teach:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {SUGGESTED.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleTeach(s)}
+                        className={`text-[11px] px-2 py-0.5 rounded-lg font-bold ${
+                          canTeach.includes(s) ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        {canTeach.includes(s) ? `✓ ${s}` : `+ ${s}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Skills Want to Learn */}
+                <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100">
+                  <span className="text-xs font-extrabold text-indigo-800 uppercase block mb-1.5">Skills I Want to Learn:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {SUGGESTED.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleLearn(s)}
+                        className={`text-[11px] px-2 py-0.5 rounded-lg font-bold ${
+                          wantLearn.includes(s) ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        {wantLearn.includes(s) ? `✓ ${s}` : `+ ${s}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button type="submit" className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-soft">
+                  {mode === 'signup' ? 'Complete Profile & Join' : 'Log In'}
+                </button>
+              </form>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Instant Demo Logins</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => { setIsAuthenticated(true); navigateTo('dashboard'); }}
+                    className="py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    Student Demo (Alex)
+                  </button>
+                  <button
+                    onClick={() => { setIsAuthenticated(true); navigateTo('admin'); }}
+                    className="py-2 px-3 rounded-xl border border-purple-200 text-xs font-bold text-purple-700 hover:bg-purple-50"
+                  >
+                    Admin Console
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 7. VIEW 3: DASHBOARD
+    // ==========================================
+    const DashboardView = () => {
+      const { currentUser, students, requests, acceptRequest, rejectRequest, navigateTo } = useExchange();
+      const pendingIncoming = requests.filter(r => r.type === 'incoming' && r.status === 'pending');
+
+      return (
+        <div className="space-y-8 animate-fade-in">
+          {/* Welcome Banner */}
+          <div className="rounded-3xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-700 text-white p-6 sm:p-8 shadow-soft-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="px-3 py-1 rounded-full bg-white/15 text-xs font-bold inline-block mb-2">
+                {currentUser.department} • {currentUser.year}
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                Welcome back, {currentUser.name}! 👋
+              </h1>
+              <p className="text-xs sm:text-sm text-indigo-100 mt-1">
+                You have {pendingIncoming.length} pending incoming requests waiting for review.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => navigateTo('explore')}
+                className="px-4 py-2.5 rounded-xl bg-white text-brand-900 font-extrabold text-xs shadow-soft"
+              >
+                Explore Skills
+              </button>
+              <button
+                onClick={() => navigateTo('recommendations')}
+                className="px-4 py-2.5 rounded-xl bg-white/20 text-white font-extrabold text-xs"
+              >
+                Smart Matches
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Reputation</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{currentUser.reputationScore} ★</div>
+              <span className="text-[11px] text-emerald-600 font-bold">Top 5% Peer Mentor</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Total Exchanges</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{currentUser.totalExchanges}</div>
+              <span className="text-[11px] text-brand-600 font-bold">{currentUser.completedSessions} completed</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Helpful Votes</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{currentUser.helpfulVotes}</div>
+              <span className="text-[11px] text-indigo-600 font-bold">Peer Upvotes</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Response Rate</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{currentUser.responseRate}</div>
+              <span className="text-[11px] text-amber-600 font-bold">Fast Responder</span>
+            </div>
+          </div>
+
+          {/* Skills Lists & Profile Strength */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-extrabold text-base text-slate-900">Skills I Can Teach</h3>
+                  <button onClick={() => navigateTo('profile')} className="text-xs font-bold text-brand-600">Edit Skills</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentUser.skillsCanTeach.map((s, i) => (
+                    <div key={i} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900">{s.name}</h4>
+                        <span className="text-[11px] text-emerald-700 font-semibold">{s.level}</span>
+                      </div>
+                      <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg border border-slate-200">
+                        {s.endorsements} endorsements
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-extrabold text-base text-slate-900">Skills I Want to Learn</h3>
+                  <button onClick={() => navigateTo('explore')} className="text-xs font-bold text-indigo-600">+ Add Goal</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {currentUser.skillsWantToLearn.map((s, i) => (
+                    <div key={i} className="p-3.5 bg-indigo-50/40 rounded-2xl border border-indigo-100 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase">{s.priority} Priority</span>
+                        <h4 className="text-sm font-extrabold text-slate-900 mt-1">{s.name}</h4>
+                      </div>
+                      <button onClick={() => navigateTo('students', s.name)} className="mt-3 text-[11px] font-bold text-brand-600 hover:underline">
+                        Find Mentors →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+                <h3 className="font-extrabold text-base text-slate-900 mb-2">Profile Strength</h3>
+                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                  <span className="text-brand-600">85% Complete</span>
+                  <span className="text-slate-400">All-Star</span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                  <div className="h-full bg-brand-600 rounded-full" style={{ width: '85%' }}></div>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">Add GitHub link to unlock 100% verification badge.</p>
+                <button onClick={() => navigateTo('profile')} className="w-full py-2.5 rounded-xl border border-brand-200 text-brand-600 text-xs font-bold">
+                  Complete Profile
+                </button>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+                <h3 className="font-extrabold text-base text-slate-900 mb-4">Recent Activity</h3>
+                <div className="space-y-3 text-xs">
+                  <p className="text-slate-700">★ Received 5.0 rating from Divya K.</p>
+                  <p className="text-slate-700">✓ Accepted swap with Ananya P. (IoT)</p>
+                  <p className="text-slate-700">🏆 Earned "Top Mentor" badge</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recommended Partners Grid */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-black text-slate-900">Recommended Skill Partners</h2>
+              <button onClick={() => navigateTo('recommendations')} className="text-xs font-bold text-brand-600 hover:underline">
+                View All Matches →
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {students.slice(0, 2).map(student => (
+                <RecommendationCard key={student.id} student={student} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 8. VIEW 4: EXPLORE SKILLS
+    // ==========================================
+    const ExploreSkillsView = () => {
+      const { navigateTo } = useExchange();
+      const [search, setSearch] = useState('');
+      const [category, setCategory] = useState('All Skills');
+
+      const filtered = SKILLS_LIST.filter(s => {
+        const mSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase());
+        const mCat = category === 'All Skills' || s.category === category;
+        return mSearch && mCat;
+      });
+
+      return (
+        <div className="space-y-8 animate-fade-in">
+          <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-6 sm:p-8 text-white shadow-soft-xl">
+            <h1 className="text-3xl font-black tracking-tight mb-2">Search for a skill...</h1>
+            <p className="text-xs sm:text-sm text-indigo-100 mb-6">Find skills other students are offering across engineering, design, languages, and agriculture.</p>
+            <div className="relative max-w-xl">
+              <Icon name="Search" className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search for a skill..."
+                className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white text-slate-900 text-sm font-semibold outline-none shadow-soft"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
+            {SKILL_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  category === cat ? 'bg-brand-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.map(s => (
+              <SkillCard key={s.id} skill={s} onExplore={(name) => navigateTo('students', name)} />
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 9. VIEW 5: FIND STUDENTS
+    // ==========================================
+    const FindStudentsView = () => {
+      const { students, searchSkillFilter, setSearchSkillFilter, openRequestModal, viewStudentProfile } = useExchange();
+      const [query, setQuery] = useState(searchSkillFilter || '');
+      const [dept, setDept] = useState('All');
+
+      useEffect(() => {
+        if (searchSkillFilter) setQuery(searchSkillFilter);
+      }, [searchSkillFilter]);
+
+      const filtered = students.filter(s => {
+        const q = query.toLowerCase();
+        const mName = s.name.toLowerCase().includes(q);
+        const mTeach = s.canTeach.some(t => t.toLowerCase().includes(q));
+        const mLearn = s.wantsToLearn.some(l => l.toLowerCase().includes(q));
+        const mDept = dept === 'All' || s.department.includes(dept);
+        return (mName || mTeach || mLearn) && mDept;
+      });
+
+      return (
+        <div className="space-y-8 animate-fade-in">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Find Students</h1>
+            <p className="text-xs text-slate-500 mt-1">Browse student profiles with skill match percentages.</p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-soft space-y-3">
+            <div className="relative">
+              <Icon name="Search" className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search by student name, skill can teach, or skill wanted..."
+                className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-slate-50 text-xs font-semibold outline-none border border-slate-200 focus:bg-white"
+              />
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-xs font-bold text-slate-500">Department:</span>
+              <select value={dept} onChange={e => setDept(e.target.value)} className="p-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold outline-none">
+                <option value="All">All Departments</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="AI & Data Science">AI & Data Science</option>
+                <option value="Electronics">Electronics & Comm</option>
+                <option value="Agriculture">Agriculture Tech</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map(student => (
+              <StudentCard
+                key={student.id}
+                student={student}
+                onOpenRequest={() => openRequestModal(student)}
+                onViewProfile={() => viewStudentProfile(student)}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 10. VIEW 6: RECOMMENDATIONS
+    // ==========================================
+    const RecommendationsView = () => {
+      const { students, openRequestModal } = useExchange();
+      const sorted = [...students].sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+      return (
+        <div className="space-y-8 animate-fade-in">
+          <div className="bg-gradient-to-r from-brand-900 via-indigo-900 to-purple-950 rounded-3xl p-6 sm:p-8 text-white shadow-soft-xl">
+            <span className="px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-bold uppercase mb-2 inline-block">
+              Skill Matching Engine
+            </span>
+            <h1 className="text-3xl font-black tracking-tight mb-2">Recommended Skill Partners</h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+              Based on your skills and learning interests. Reciprocal pairs where both students benefit mutually.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {sorted.map(student => (
+              <RecommendationCard key={student.id} student={student} onOpenRequest={() => openRequestModal(student)} />
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 11. VIEW 7: REQUESTS PAGE
+    // ==========================================
+    const RequestsView = () => {
+      const { requests, acceptRequest, rejectRequest, navigateTo } = useExchange();
+      const [tab, setTab] = useState('incoming');
+
+      const incoming = requests.filter(r => r.type === 'incoming' && r.status === 'pending');
+      const sent = requests.filter(r => r.type === 'sent' && r.status === 'pending');
+      const accepted = requests.filter(r => r.status === 'accepted');
+      const completed = requests.filter(r => r.status === 'completed');
+
+      let currentList = incoming;
+      if (tab === 'sent') currentList = sent;
+      else if (tab === 'accepted') currentList = accepted;
+      else if (tab === 'completed') currentList = completed;
+
+      return (
+        <div className="space-y-8 animate-fade-in">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Skill Exchange Requests</h1>
+            <p className="text-xs text-slate-500 mt-1">Manage incoming, sent, accepted, and completed barter exchanges.</p>
+          </div>
+
+          <div className="flex p-1 bg-slate-200 rounded-2xl overflow-x-auto">
+            <button onClick={() => setTab('incoming')} className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl whitespace-nowrap ${tab === 'incoming' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600'}`}>
+              Incoming Requests ({incoming.length})
+            </button>
+            <button onClick={() => setTab('sent')} className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl whitespace-nowrap ${tab === 'sent' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600'}`}>
+              Sent Requests ({sent.length})
+            </button>
+            <button onClick={() => setTab('accepted')} className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl whitespace-nowrap ${tab === 'accepted' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600'}`}>
+              Accepted Exchanges ({accepted.length})
+            </button>
+            <button onClick={() => setTab('completed')} className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl whitespace-nowrap ${tab === 'completed' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600'}`}>
+              Completed Exchanges ({completed.length})
+            </button>
+          </div>
+
+          {currentList.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {currentList.map(req => (
+                <RequestCard key={req.id} request={req} onAccept={acceptRequest} onReject={rejectRequest} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto">
+              <p className="text-sm font-bold text-slate-700">No requests in this tab.</p>
+              <button onClick={() => navigateTo('students')} className="mt-4 px-5 py-2.5 bg-brand-600 text-white text-xs font-bold rounded-xl shadow-soft">
+                Find Students
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 12. VIEW 8: STUDENT PROFILE
+    // ==========================================
+    const StudentProfileView = () => {
+      const { currentUser, selectedStudent, setSelectedStudent, openRequestModal, reviews } = useExchange();
+      const profile = selectedStudent || currentUser;
+      const isMe = !selectedStudent || selectedStudent.id === currentUser.id;
+
+      const canTeachList = isMe ? profile.skillsCanTeach.map(s => s.name) : profile.canTeach || [];
+      const wantsLearnList = isMe ? profile.skillsWantToLearn.map(s => s.name) : profile.wantsToLearn || [];
+
+      return (
+        <div className="space-y-8 animate-fade-in max-w-5xl mx-auto">
+          {!isMe && (
+            <button onClick={() => setSelectedStudent(null)} className="text-xs font-bold text-slate-600 hover:text-brand-600">
+              ← Back to My Profile
+            </button>
+          )}
+
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+            <div className="h-44 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-700 relative">
+              <span className="absolute bottom-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold">
+                Verified Campus Student
+              </span>
+            </div>
+            <div className="px-6 sm:px-8 pb-8 pt-0">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-16 sm:-mt-20 gap-4 mb-6">
+                <div className="flex items-end space-x-4">
+                  <img src={profile.avatar} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover ring-4 ring-white shadow-soft-xl" />
+                  <div>
+                    <h1 className="text-2xl font-black text-slate-900">{profile.name}</h1>
+                    <p className="text-xs font-semibold text-slate-500">{profile.department} • {profile.year}</p>
+                    <div className="flex items-center space-x-2 mt-1 text-xs font-bold text-slate-600">
+                      <span className="text-amber-500">★ {profile.reputationScore || profile.rating || 4.9}</span>
+                      <span>•</span>
+                      <span className="text-brand-600">{profile.totalExchanges || profile.exchangesCompleted || 14} exchanges</span>
+                    </div>
+                  </div>
+                </div>
+
+                {!isMe && (
+                  <button
+                    onClick={() => openRequestModal(profile)}
+                    className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-soft flex items-center justify-center space-x-2"
+                  >
+                    <Icon name="ArrowRightLeft" className="w-4 h-4" />
+                    <span>Send Skill Exchange Request</span>
+                  </button>
+                )}
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 leading-relaxed">
+                {profile.bio}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                  <span className="text-xs font-extrabold text-emerald-800 uppercase block mb-2">Can Teach</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {canTeachList.map((s, i) => (
+                      <span key={i} className="text-xs font-bold px-2 py-1 bg-white text-emerald-900 rounded-lg border border-emerald-200">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100">
+                  <span className="text-xs font-extrabold text-indigo-800 uppercase block mb-2">Wants to Learn</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {wantsLearnList.map((s, i) => (
+                      <span key={i} className="text-xs font-bold px-2 py-1 bg-white text-indigo-900 rounded-lg border border-indigo-200">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+            <h3 className="font-extrabold text-base text-slate-900 mb-4">Peer Reviews</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reviews.map(r => <RatingCard key={r.id} review={r} />)}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 13. VIEW 9: REPUTATION / RATINGS
+    // ==========================================
+    const ReputationView = () => {
+      const { currentUser, reviews } = useExchange();
+
+      return (
+        <div className="space-y-8 animate-fade-in max-w-5xl mx-auto">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Reputation Dashboard</h1>
+            <p className="text-xs text-slate-500 mt-1">Verifiable evaluations from completed exchange sessions.</p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-soft">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+              <div className="md:col-span-4 text-center md:border-r border-slate-100 pr-6">
+                <span className="text-xs font-bold text-slate-400 uppercase">Overall Rating</span>
+                <div className="text-5xl font-black text-slate-900 mt-2">{currentUser.reputationScore} / 5.0</div>
+                <div className="flex items-center justify-center text-amber-500 my-2">
+                  {[...Array(5)].map((_, i) => <Icon key={i} name="Star" className="w-4 h-4 fill-amber-500" />)}
+                </div>
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  98% Positive Feedback
+                </span>
+              </div>
+
+              <div className="md:col-span-8 space-y-2">
+                {[
+                  { stars: 5, pct: 88 },
+                  { stars: 4, pct: 10 },
+                  { stars: 3, pct: 2 },
+                  { stars: 2, pct: 0 },
+                  { stars: 1, pct: 0 }
+                ].map(r => (
+                  <div key={r.stars} className="flex items-center space-x-3 text-xs font-bold text-slate-600">
+                    <span className="w-12 text-right">{r.stars} Stars</span>
+                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full" style={{ width: `${r.pct}%` }}></div>
+                    </div>
+                    <span className="w-8 text-slate-400">{r.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-2xl font-black text-slate-900 block">{currentUser.totalExchanges}</span>
+              <span className="text-xs font-bold text-slate-400">Total Exchanges</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-2xl font-black text-slate-900 block">{currentUser.completedSessions}</span>
+              <span className="text-xs font-bold text-slate-400">Completed Sessions</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-2xl font-black text-slate-900 block">{currentUser.helpfulVotes}</span>
+              <span className="text-xs font-bold text-slate-400">Helpful Votes</span>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-2xl font-black text-slate-900 block">{currentUser.responseRate}</span>
+              <span className="text-xs font-bold text-slate-400">Response Rate</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+            <h3 className="font-extrabold text-base text-slate-900 mb-4">Recent Reviews</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reviews.map(r => <RatingCard key={r.id} review={r} />)}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 14. VIEW 10: MESSAGES
+    // ==========================================
+    const MessagesView = () => {
+      const { conversations, activeConvId, setActiveConvId, sendMessage, showToast } = useExchange();
+      const [input, setInput] = useState('');
+      const activeConv = conversations.find(c => c.id === activeConvId) || conversations[0];
+
+      const handleSend = (e) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+        sendMessage(activeConv.id, input);
+        setInput('');
+      };
+
+      return (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden h-[calc(100vh-9rem)] flex flex-col md:flex-row animate-fade-in">
+          <div className="w-full md:w-80 border-r border-slate-200 flex flex-col bg-slate-50/50">
+            <div className="p-4 border-b border-slate-200 bg-white">
+              <h2 className="font-extrabold text-sm text-slate-900">Exchange Chats</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+              {conversations.map(c => (
+                <div
+                  key={c.id}
+                  onClick={() => setActiveConvId(c.id)}
+                  className={`p-4 flex items-center space-x-3 cursor-pointer ${c.id === activeConv.id ? 'bg-brand-50' : 'hover:bg-slate-100'}`}
+                >
+                  <div className="relative">
+                    <img src={c.partnerAvatar} alt={c.partnerName} className="w-10 h-10 rounded-xl object-cover" />
+                    {c.online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 truncate">{c.partnerName}</h4>
+                    <p className="text-[11px] font-bold text-brand-600 truncate">{c.skillExchange}</p>
+                    <p className="text-xs text-slate-500 truncate">{c.lastMessage}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col h-full bg-white">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <img src={activeConv.partnerAvatar} alt={activeConv.partnerName} className="w-10 h-10 rounded-xl object-cover" />
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900">{activeConv.partnerName}</h3>
+                  <p className="text-xs text-brand-600 font-bold">{activeConv.skillExchange}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => showToast('Session Reminder Set 📅', `Coordinate with ${activeConv.partnerName}`, 'info')}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold"
+              >
+                Schedule Session
+              </button>
+            </div>
+
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+              {activeConv.messages.map(m => (
+                <div key={m.id} className={`flex flex-col ${m.isMe ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-md px-4 py-2 rounded-2xl text-xs sm:text-sm font-medium ${
+                    m.isMe ? 'bg-brand-600 text-white' : 'bg-white text-slate-800 border border-slate-200'
+                  }`}>
+                    {m.text}
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5">{m.time}</span>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleSend} className="p-3 border-t border-slate-200 flex items-center space-x-2">
+              <input
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={`Message ${activeConv.partnerName}...`}
+                className="flex-1 p-2.5 rounded-xl bg-slate-100 text-xs font-medium outline-none focus:bg-white focus:ring-2 focus:ring-brand-500"
+              />
+              <button type="submit" className="p-2.5 rounded-xl bg-brand-600 text-white">
+                <Icon name="Send" className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 15. VIEW 11: ADMIN DASHBOARD
+    // ==========================================
+    const AdminDashboardView = () => {
+      const { navigateTo, showToast } = useExchange();
+      const [users, setUsers] = useState(ADMIN_STATS.recentUsers);
+
+      const toggleVerify = (id) => {
+        setUsers(prev => prev.map(u => u.id === id ? { ...u, verified: !u.verified } : u));
+        showToast('Status Updated', 'Student verification status was toggled.', 'info');
+      };
+
+      return (
+        <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
+          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-soft-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-200 text-xs font-bold uppercase mb-2 inline-block">
+                Operations & Administration
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black">SkillBridge Admin Console</h1>
+              <p className="text-xs text-purple-200 mt-1">Manage student verifications, skills directory, and platform metrics.</p>
+            </div>
+            <button onClick={() => navigateTo('dashboard')} className="px-4 py-2 rounded-xl bg-white/20 text-xs font-bold">
+              Exit to Student View
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Total Students</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{ADMIN_STATS.totalStudents}</div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Active Exchanges</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{ADMIN_STATS.activeExchanges}</div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Popular Skills</span>
+              <div className="text-3xl font-black text-slate-900 mt-1">{ADMIN_STATS.popularSkillsCount}</div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft">
+              <span className="text-xs font-bold text-slate-400 uppercase">Pending Reports</span>
+              <div className="text-3xl font-black text-rose-600 mt-1">{ADMIN_STATS.pendingReports}</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+            <div className="p-5 border-b border-slate-100">
+              <h3 className="font-extrabold text-base text-slate-900">User Management</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-400 font-bold uppercase border-b border-slate-100">
+                    <th className="p-4">Student</th>
+                    <th className="p-4">Dept & Year</th>
+                    <th className="p-4">Skills</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {users.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50">
+                      <td className="p-4 font-bold text-slate-900">{u.name}</td>
+                      <td className="p-4">{u.dept} ({u.year} Yr)</td>
+                      <td className="p-4">{u.skills}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.verified ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                          {u.verified ? 'Verified' : 'Pending'}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <button onClick={() => toggleVerify(u.id)} className="px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold hover:bg-slate-100">
+                          {u.verified ? 'Revoke' : 'Verify ID'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 15.5. VIEW 12: DASHBOARD LOGIN PAGE
+    // ==========================================
+    const DashboardLoginPage = () => {
+      const { navigateTo, setIsAuthenticated, setCurrentUser, setIsAdmin, showToast } = useExchange();
+      const [role, setRole] = useState('student');
+      const [email, setEmail] = useState('alex.johnson@campus.edu');
+      const [password, setPassword] = useState('student123');
+      const [showPassword, setShowPassword] = useState(false);
+      const [rememberMe, setRememberMe] = useState(true);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setIsAuthenticated(true);
+          if (role === 'admin') {
+            setIsAdmin(true);
+            showToast('Admin Access Granted 🛡️', 'Welcome to Campus Management.', 'info');
+            navigateTo('admin');
+          } else {
+            setIsAdmin(false);
+            showToast('Welcome to Dashboard! 👋', 'Signed into Student Skill Exchange.', 'success');
+            navigateTo('dashboard');
+          }
+        }, 500);
+      };
+
+      const handleQuickLogin = (type) => {
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setIsAuthenticated(true);
+          if (type === 'rahul') {
+            setCurrentUser(prev => ({
+              ...prev,
+              name: "Rahul Sharma",
+              email: "rahul.s@campus.edu",
+              department: "Information Technology",
+              year: "2nd Year",
+              avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
+              reputationScore: 4.9
+            }));
+            setIsAdmin(false);
+            showToast('Welcome back, Rahul! 👋', 'Logged into Student Dashboard.', 'success');
+            navigateTo('dashboard');
+          } else if (type === 'priya') {
+            setCurrentUser(prev => ({
+              ...prev,
+              name: "Priya Sundaram",
+              email: "priya.s@campus.edu",
+              department: "Computer Science",
+              year: "3rd Year",
+              avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+              reputationScore: 5.0
+            }));
+            setIsAdmin(false);
+            showToast('Welcome back, Priya! 🎨', 'Logged into Student Dashboard.', 'success');
+            navigateTo('dashboard');
+          } else if (type === 'admin') {
+            setIsAdmin(true);
+            showToast('Admin Console Ready 🛡️', 'Logged into SkillBridge Operations.', 'info');
+            navigateTo('admin');
+          }
+        }, 400);
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in font-sans">
+          <div className="max-w-4xl w-full bg-white rounded-3xl shadow-soft-xl border border-slate-200 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+            
+            {/* Left Side */}
+            <div className="lg:col-span-5 bg-gradient-to-br from-brand-900 via-indigo-950 to-brand-950 text-white p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+              <div>
+                <div onClick={() => navigateTo('landing')} className="inline-flex items-center space-x-2.5 cursor-pointer mb-8 select-none">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-soft">
+                    <Icon name="ArrowRightLeft" className="w-5 h-5" />
+                  </div>
+                  <span className="font-extrabold text-xl tracking-tight text-white">
+                    Skill<span className="text-brand-400">Bridge</span>
+                  </span>
+                </div>
+
+                <span className="px-3 py-1 rounded-full bg-white/10 text-brand-200 text-xs font-bold uppercase tracking-wider inline-block mb-3">
+                  Campus Dashboard Portal
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-snug mb-3">
+                  Your Skills. <br />
+                  Your Peer Network.
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
+                  Sign in to manage active skill exchanges, review incoming requests, chat with peer mentors, and check your reputation score.
+                </p>
+
+                <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 space-y-3 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-300 font-semibold">Active Barter Network</span>
+                    <span className="text-emerald-400 font-bold flex items-center space-x-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                      <span>Live</span>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="p-2 rounded-xl bg-black/20">
+                      <span className="text-[10px] text-slate-400 block">Pending Requests</span>
+                      <span className="text-sm font-black text-amber-300">2 Inquiries</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/20">
+                      <span className="text-[10px] text-slate-400 block">Reputation Score</span>
+                      <span className="text-sm font-black text-white">4.9 ★</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+                <span className="flex items-center space-x-1">
+                  <Icon name="ShieldCheck" className="w-4 h-4 text-emerald-400" />
+                  <span>Verified Campus Sign-in</span>
+                </span>
+                <button onClick={() => navigateTo('landing')} className="text-white hover:underline font-semibold">
+                  Home
+                </button>
+              </div>
+            </div>
+
+            {/* Right Side */}
+            <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between">
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    Log In to Dashboard
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enter your campus credentials or use one-click demo access.
+                  </p>
+                </div>
+
+                <div className="flex p-1 bg-slate-100 rounded-2xl mb-6">
+                  <button
+                    type="button"
+                    onClick={() => { setRole('student'); setEmail('alex.johnson@campus.edu'); }}
+                    className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
+                      role === 'student' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500'
+                    }`}
+                  >
+                    <Icon name="User" className="w-3.5 h-3.5" />
+                    <span>Student / Peer Mentor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setRole('admin'); setEmail('admin@campus.edu'); }}
+                    className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
+                      role === 'admin' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500'
+                    }`}
+                  >
+                    <Icon name="Shield" className="w-3.5 h-3.5" />
+                    <span>Campus Admin</span>
+                  </button>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      {role === 'student' ? 'Student Campus Email' : 'Administrator Email'}
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Password
+                      </label>
+                      <span className="text-[11px] font-bold text-brand-600 cursor-pointer" onClick={() => showToast('Help', 'Contact campus administration.', 'info')}>
+                        Forgot password?
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-brand-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1"
+                      >
+                        <Icon name="Eye" className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-slate-300 text-brand-600 w-4 h-4"
+                    />
+                    <span>Remember me on this campus device</span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full py-3.5 rounded-xl text-white font-extrabold text-xs sm:text-sm shadow-soft flex items-center justify-center space-x-2 ${
+                      role === 'admin' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-brand-600 hover:bg-brand-700'
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span>Signing into Dashboard...</span>
+                    ) : (
+                      <>
+                        <span>Sign In to {role === 'admin' ? 'Admin Console' : 'Dashboard'}</span>
+                        <Icon name="ChevronRight" className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Demo Quick Logins */}
+                <div className="mt-6 pt-5 border-t border-slate-100">
+                  <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                    Instant One-Click Demo Profiles
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin('rahul')}
+                      className="p-2 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 text-[11px] font-bold text-slate-700 flex flex-col items-center justify-center"
+                    >
+                      <span className="font-extrabold text-slate-900">Rahul S.</span>
+                      <span className="text-[10px] text-slate-400">IT 2nd Yr</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin('priya')}
+                      className="p-2 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 text-[11px] font-bold text-slate-700 flex flex-col items-center justify-center"
+                    >
+                      <span className="font-extrabold text-slate-900">Priya S.</span>
+                      <span className="text-[10px] text-slate-400">CSE 3rd Yr</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin('admin')}
+                      className="p-2 rounded-xl border border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-[11px] font-bold text-purple-700 flex flex-col items-center justify-center"
+                    >
+                      <span className="font-extrabold text-purple-900">Admin</span>
+                      <span className="text-[10px] text-purple-500">Moderator</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <p className="text-center text-xs text-slate-500 mt-6 pt-4 border-t border-slate-100">
+                Need a new student account?{' '}
+                <button onClick={() => navigateTo('login')} className="font-bold text-brand-600 hover:underline">
+                  Sign up free
+                </button>
+              </p>
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 16. MAIN APP COMPONENT
+    // ==========================================
+    const App = () => {
+      const { activeTab } = useExchange();
+      const isFullScreen = activeTab === 'landing' || activeTab === 'login' || activeTab === 'dashboard-login';
+
+      return (
+        <div className="min-h-screen text-slate-900 font-sans flex flex-col" style={{position:'relative', zIndex:2}}>
+          <Navbar />
+
+          {isFullScreen ? (
+            <main className="flex-1">
+              {activeTab === 'landing' && <LandingPage />}
+              {activeTab === 'login' && <AuthPage />}
+              {activeTab === 'dashboard-login' && <DashboardLoginPage />}
+            </main>
+          ) : (
+            <div className="flex-1 max-w-7xl w-full mx-auto flex">
+              <Sidebar />
+              <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 min-w-0 overflow-y-auto">
+                {activeTab === 'dashboard' && <DashboardView />}
+                {activeTab === 'explore' && <ExploreSkillsView />}
+                {activeTab === 'students' && <FindStudentsView />}
+                {activeTab === 'recommendations' && <RecommendationsView />}
+                {activeTab === 'requests' && <RequestsView />}
+                {activeTab === 'profile' && <StudentProfileView />}
+                {activeTab === 'reputation' && <ReputationView />}
+                {activeTab === 'messages' && <MessagesView />}
+                {activeTab === 'admin' && <AdminDashboardView />}
+              </main>
+            </div>
+          )}
+
+          {!isFullScreen && <BottomNav />}
+
+          <SendRequestModal />
+          <StudentDetailModal />
+          <ToastContainer />
+        </div>
+      );
+    };
+
+    // Render Root
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <ExchangeProvider>
+        <App />
+      </ExchangeProvider>
+    );
+  </script>
+</body>
+</html>

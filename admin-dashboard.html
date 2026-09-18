@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillBridge | Admin Control Panel</title>
+  <meta name="description" content="SkillBridge admin dashboard — manage users, exchanges, reports and platform analytics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #06051a;
+      background-image:
+        radial-gradient(ellipse 70% 50% at 5% 0%, rgba(139,92,246,0.45) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 95% 100%, rgba(99,102,241,0.3) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(236,72,153,0.08) 0%, transparent 70%);
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+
+    .perspective { perspective: 1200px; }
+    .card-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
+    }
+    .card-3d:hover {
+      transform: rotateY(-5deg) rotateX(3deg) translateZ(12px) scale(1.02);
+      box-shadow: 16px 24px 48px rgba(0,0,0,0.6), 0 0 35px rgba(139,92,246,0.35);
+    }
+
+    @keyframes float3d {
+      0%,100% { transform: translateY(0) rotateZ(0deg); }
+      50%      { transform: translateY(-8px) rotateZ(1deg); }
+    }
+    .float3d { animation: float3d 6s ease-in-out infinite; }
+
+    @keyframes glow { 0%,100% { box-shadow:0 0 15px rgba(139,92,246,0.3); } 50% { box-shadow:0 0 32px rgba(139,92,246,0.6); } }
+    .glow-purple { animation: glow 3s ease-in-out infinite; }
+
+    .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.08); }
+    .glass-b { background:rgba(255,255,255,0.06); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.1); }
+    .glass-nav { background:rgba(6,5,26,0.85); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid rgba(139,92,246,0.25); }
+
+    .grid-bg { background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px); background-size:50px 50px; }
+
+    @keyframes orbDrift { 0%{transform:translate(0,0) scale(1)} 50%{transform:translate(25px,-20px) scale(1.04)} 100%{transform:translate(0,0) scale(1)} }
+    .orb { animation:orbDrift 18s ease-in-out infinite; pointer-events:none; }
+
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in-up { animation:fadeInUp 0.5s cubic-bezier(0.22,0.61,0.36,1) both; }
+    .delay-1 { animation-delay:0.1s; } .delay-2 { animation-delay:0.2s; } .delay-3 { animation-delay:0.3s; }
+
+    ::-webkit-scrollbar { width:5px; height:5px; } ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(139,92,246,0.4); border-radius:999px; }
+
+    .nav-active { background:linear-gradient(135deg,rgba(139,92,246,0.85),rgba(99,102,241,0.75)) !important; box-shadow:0 4px 14px rgba(139,92,246,0.4); color:white !important; }
+
+    .trow:hover { background:rgba(139,92,246,0.07); }
+
+    .status-active { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#34d399; }
+    .status-flagged { background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; }
+    .status-pending { background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); color:#fbbf24; }
+    .status-investigating { background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#818cf8; }
+    .status-suspended { background:rgba(239,68,68,0.25); border:1px solid rgba(239,68,68,0.5); color:#fca5a5; }
+
+    .prog { height:5px; border-radius:999px; background:linear-gradient(90deg,#8b5cf6,#6366f1); box-shadow:0 0 8px rgba(139,92,246,0.5); }
+    .danger-zone { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); }
+
+    /* Toast styling */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 280px;
+      max-width: 380px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(18, 14, 46, 0.95);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(139,92,246,0.25);
+      backdrop-filter: blur(16px);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(20px) scale(0.95); }
+    }
+  </style>
+</head>
+<body class="grid-bg min-h-screen text-slate-100 flex flex-col">
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Background orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="orb absolute w-96 h-96 rounded-full" style="background:radial-gradient(circle,rgba(139,92,246,0.3) 0%,transparent 70%); top:-8%; left:-5%;"></div>
+    <div class="orb absolute w-72 h-72 rounded-full" style="background:radial-gradient(circle,rgba(99,102,241,0.2) 0%,transparent 70%); bottom:5%; right:5%; animation-delay:-9s;"></div>
+    <div class="orb absolute w-56 h-56 rounded-full" style="background:radial-gradient(circle,rgba(236,72,153,0.1) 0%,transparent 70%); top:50%; left:55%; animation-delay:-15s;"></div>
+  </div>
+
+  <!-- ═══════════════════════ ADMIN LOGIN ═══════════════════════ -->
+  <div id="loginScreen" class="relative z-10 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md fade-in-up">
+      <div class="glass-b rounded-3xl p-8 shadow-2xl" style="border:1px solid rgba(139,92,246,0.25)">
+        <!-- Logo -->
+        <div class="flex items-center justify-center mb-8">
+          <div class="perspective mr-3">
+            <div class="float3d w-14 h-14 rounded-2xl flex items-center justify-center" style="background:linear-gradient(135deg,#8b5cf6,#6366f1); box-shadow:0 8px 24px rgba(139,92,246,0.5)">
+              <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold text-white">Skill<span style="color:#a78bfa">Bridge</span></h1>
+            <p class="text-xs font-semibold" style="color:#c4b5fd">Admin Control Center</p>
+          </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-white text-center mb-1">Administrator Sign In</h2>
+        <p class="text-sm text-center mb-6" style="color:rgba(196,181,253,0.6)">Protected area · Campus staff & moderators only</p>
+
+        <form onsubmit="doAdminLogin(event)">
+          <div class="mb-4">
+            <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style="color:rgba(196,181,253,0.8)">Admin ID / Staff Email</label>
+            <input type="text" id="adminId" placeholder="admin@campus.edu" value="admin@campus.edu"
+              class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-purple-300/40 outline-none transition-all focus:ring-2 focus:ring-purple-500"
+              style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3);" />
+          </div>
+          <div class="mb-6">
+            <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style="color:rgba(196,181,253,0.8)">Secret Key / Password</label>
+            <input type="password" id="adminKey" placeholder="••••••••" value="admin123"
+              class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-purple-300/40 outline-none transition-all focus:ring-2 focus:ring-purple-500"
+              style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3);" />
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90 active:scale-95"
+            style="background:linear-gradient(135deg,#8b5cf6,#6366f1); box-shadow:0 8px 28px rgba(139,92,246,0.5)">
+            Access Admin Panel →
+          </button>
+        </form>
+
+        <div class="mt-4 p-3 rounded-xl" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2)">
+          <p class="text-[11px] text-center" style="color:rgba(196,181,253,0.6)">Demo: Click to login as admin</p>
+          <button onclick="doAdminDemo()" class="mt-2 w-full py-2 rounded-lg text-xs font-bold transition-all hover:opacity-80" style="background:rgba(139,92,246,0.25); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3)">
+            🛡️ Demo Admin Access
+          </button>
+        </div>
+
+        <div class="mt-4 flex items-center justify-center text-xs">
+          <a href="../index.html" style="color:#818cf8;" class="hover:opacity-80 flex items-center gap-1">← Back to Main Site</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ ADMIN DASHBOARD ═══════════════════════ -->
+  <div id="adminDashboard" class="hidden relative z-10 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="glass-nav sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#8b5cf6,#6366f1); box-shadow:0 4px 12px rgba(139,92,246,0.5)">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <span class="font-extrabold text-white">Skill<span style="color:#a78bfa">Bridge</span></span>
+          <span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.3); color:#c4b5fd">ADMIN</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Live Student Messages Quick Badge -->
+        <button onclick="switchSection('messages')" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-pointer">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-xs font-bold text-indigo-200">Live Student Inbox (<span id="navMsgCount">2</span>)</span>
+        </button>
+
+        <button onclick="switchSection('reports')" class="flex items-center gap-2 px-3 py-1.5 rounded-xl" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.2)">
+          <div class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
+          <span class="text-xs font-bold text-red-300"><span id="navReportCount">3</span> Pending Reports</span>
+        </button>
+        <button onclick="doLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold text-red-300 hover:text-red-200 transition-all" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2)">Logout</button>
+      </div>
+    </header>
+
+    <div class="flex flex-1 max-w-screen-xl w-full mx-auto px-4 py-6 gap-6">
+      <!-- Sidebar -->
+      <aside class="w-60 flex-shrink-0 hidden lg:block">
+        <div class="glass rounded-2xl p-4 sticky top-24">
+          <div class="mb-5 p-3 rounded-xl" style="background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.25)">
+            <div class="flex items-center gap-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white font-extrabold text-sm" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">A</div>
+              <div><p class="text-xs font-bold text-white">Admin Moderator</p><p class="text-[10px]" style="color:rgba(196,181,253,0.5)">Full Control Access</p></div>
+            </div>
+          </div>
+          <nav class="space-y-1">
+            <button onclick="switchSection('overview')" id="sec-overview" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Overview
+            </button>
+            <button onclick="switchSection('messages')" id="sec-messages" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Student Messages
+              <span id="sidebarMsgBadge" class="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white bg-indigo-600">2</span>
+            </button>
+            <button onclick="switchSection('users')" id="sec-users" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> User Management
+            </button>
+            <button onclick="switchSection('exchanges')" id="sec-exchanges" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg> Exchanges
+            </button>
+            <button onclick="switchSection('reports')" id="sec-reports" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Reports & Conduct
+              <span id="sidebarReportBadge" class="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:#ef4444">3</span>
+            </button>
+            <button onclick="switchSection('skills')" id="sec-skills" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Skills Registry
+            </button>
+            <button onclick="switchSection('settings')" id="sec-settings" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all" style="color:rgba(196,181,253,0.8)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings
+            </button>
+          </nav>
+          <div class="mt-4 pt-4" style="border-top:1px solid rgba(139,92,246,0.15)">
+            <a href="../index.html" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold hover:opacity-80 transition-all" style="color:#818cf8">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Main Site
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Panel -->
+      <main class="flex-1 min-w-0">
+
+        <!-- ── OVERVIEW ── -->
+        <div id="sec-panel-overview">
+          <div class="flex items-center justify-between mb-2 fade-in-up">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white">Admin Overview</h2>
+              <p class="text-sm" style="color:rgba(196,181,253,0.55)">Platform health, live student messages, and campus activity at a glance.</p>
+            </div>
+            <button onclick="switchSection('messages')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md transition-all">
+              View Student Messages (<span id="overviewMsgCount">2</span>)
+            </button>
+          </div>
+
+          <!-- 3D Stat Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-6 perspective">
+            <div class="card-3d glow-purple glass-b rounded-2xl p-5 fade-in-up">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:rgba(139,92,246,0.25)">
+                <svg class="w-5 h-5" style="color:#a78bfa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statTotalStudents">1,428</div>
+              <div class="text-xs mt-1 font-medium" style="color:rgba(196,181,253,0.55)">Total Students</div>
+              <div class="text-[10px] mt-1" style="color:#86efac">+24 this week</div>
+            </div>
+            <div class="card-3d glow-purple glass-b rounded-2xl p-5 fade-in-up" style="animation-delay:0.1s">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:rgba(16,185,129,0.2)">
+                <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statActiveExchanges">342</div>
+              <div class="text-xs mt-1 font-medium" style="color:rgba(196,181,253,0.55)">Active Exchanges</div>
+              <div class="text-[10px] mt-1 text-emerald-400">+18 today</div>
+            </div>
+            <div class="card-3d glow-purple glass-b rounded-2xl p-5 fade-in-up" style="animation-delay:0.2s">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:rgba(245,158,11,0.2)">
+                <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statSkillsListed">68</div>
+              <div class="text-xs mt-1 font-medium" style="color:rgba(196,181,253,0.55)">Skills Listed</div>
+              <div class="text-[10px] mt-1 text-amber-400">+5 new skills</div>
+            </div>
+            <div class="card-3d glow-purple glass-b rounded-2xl p-5 fade-in-up" style="animation-delay:0.3s">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:rgba(239,68,68,0.2)">
+                <svg class="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statPendingReports">3</div>
+              <div class="text-xs mt-1 font-medium" style="color:rgba(196,181,253,0.55)">Pending Reports</div>
+              <div class="text-[10px] mt-1 text-red-400">⚠ Needs review</div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="grid lg:grid-cols-2 gap-5 mb-5">
+            <!-- Top Skills -->
+            <div class="glass-b rounded-2xl p-5">
+              <h3 class="text-sm font-bold text-white mb-4">🔥 Top Skills by Demand</h3>
+              <div class="space-y-3">
+                <div><div class="flex justify-between text-xs mb-1"><span style="color:rgba(196,181,253,0.8)">Web Development</span><span class="text-white font-bold">195</span></div><div class="h-1.5 rounded-full" style="background:rgba(139,92,246,0.2)"><div class="prog" style="width:99%"></div></div></div>
+                <div><div class="flex justify-between text-xs mb-1"><span style="color:rgba(196,181,253,0.8)">Python</span><span class="text-white font-bold">142</span></div><div class="h-1.5 rounded-full" style="background:rgba(139,92,246,0.2)"><div class="prog" style="width:72%"></div></div></div>
+                <div><div class="flex justify-between text-xs mb-1"><span style="color:rgba(196,181,253,0.8)">Java</span><span class="text-white font-bold">128</span></div><div class="h-1.5 rounded-full" style="background:rgba(139,92,246,0.2)"><div class="prog" style="width:65%"></div></div></div>
+                <div><div class="flex justify-between text-xs mb-1"><span style="color:rgba(196,181,253,0.8)">C Programming</span><span class="text-white font-bold">110</span></div><div class="h-1.5 rounded-full" style="background:rgba(139,92,246,0.2)"><div class="prog" style="width:56%"></div></div></div>
+                <div><div class="flex justify-between text-xs mb-1"><span style="color:rgba(196,181,253,0.8)">Machine Learning</span><span class="text-white font-bold">76</span></div><div class="h-1.5 rounded-full" style="background:rgba(139,92,246,0.2)"><div class="prog" style="width:39%"></div></div></div>
+              </div>
+            </div>
+            <!-- Department Distribution -->
+            <div class="glass-b rounded-2xl p-5">
+              <h3 class="text-sm font-bold text-white mb-4">🎓 Students by Department</h3>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:#8b5cf6; flex-shrink:0"></div><span class="text-xs flex-1" style="color:rgba(196,181,253,0.8)">Information Technology</span><span class="text-white text-xs font-bold">412</span></div>
+                <div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:#6366f1; flex-shrink:0"></div><span class="text-xs flex-1" style="color:rgba(196,181,253,0.8)">Computer Science</span><span class="text-white text-xs font-bold">389</span></div>
+                <div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:#10b981; flex-shrink:0"></div><span class="text-xs flex-1" style="color:rgba(196,181,253,0.8)">AI & Data Science</span><span class="text-white text-xs font-bold">201</span></div>
+                <div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:#f59e0b; flex-shrink:0"></div><span class="text-xs flex-1" style="color:rgba(196,181,253,0.8)">Electronics & Comm.</span><span class="text-white text-xs font-bold">185</span></div>
+                <div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:#ec4899; flex-shrink:0"></div><span class="text-xs flex-1" style="color:rgba(196,181,253,0.8)">Other Departments</span><span class="text-white text-xs font-bold">241</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Users -->
+          <div class="glass-b rounded-2xl overflow-hidden">
+            <div class="p-5 flex items-center justify-between" style="border-bottom:1px solid rgba(139,92,246,0.15)">
+              <h3 class="text-sm font-bold text-white">👤 Recent Student Registrations</h3>
+              <button onclick="switchSection('users')" class="text-xs font-bold hover:opacity-80 transition-all" style="color:#a78bfa">View All →</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead><tr style="border-bottom:1px solid rgba(139,92,246,0.1)"><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Student</th><th class="px-4 py-3 text-left font-semibold hidden md:table-cell" style="color:rgba(196,181,253,0.5)">Department</th><th class="px-4 py-3 text-left font-semibold hidden lg:table-cell" style="color:rgba(196,181,253,0.5)">Skills</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Status</th></tr></thead>
+                <tbody id="recentUsersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STUDENT MESSAGES SECTION (SHARED REAL-TIME INBOX) ── -->
+        <div id="sec-panel-messages" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white">Student Inquiries & Live Messages</h2>
+              <p class="text-sm mt-1" style="color:rgba(196,181,253,0.55)">Real-time messages sent by students from their dashboard. You can review and reply instantly.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Shared Sync
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="adminMessagesList"></div>
+        </div>
+
+        <!-- ── USERS SECTION ── -->
+        <div id="sec-panel-users" class="hidden">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white">User Management</h2>
+              <p class="text-sm mt-1" style="color:rgba(196,181,253,0.55)">View, verify, suspend, and add campus student accounts.</p>
+            </div>
+            <div class="flex gap-2">
+              <input id="userSearchInput" oninput="filterUsersTable()" placeholder="Search student name, dept, skills..." class="px-3 py-2 rounded-xl text-xs text-white outline-none" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.25); color:white; width:220px" />
+              <button onclick="openAddUserModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all shadow-md">+ Add User</button>
+            </div>
+          </div>
+          <div class="glass-b rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead><tr style="border-bottom:1px solid rgba(139,92,246,0.15)"><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Student</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Dept</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Year</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Skills</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Status</th><th class="px-4 py-3 text-left font-semibold" style="color:rgba(196,181,253,0.5)">Actions</th></tr></thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── EXCHANGES SECTION ── -->
+        <div id="sec-panel-exchanges" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Exchange Monitor</h2>
+              <p class="text-sm" style="color:rgba(196,181,253,0.55)">Live overview of all active and completed skill exchanges.</p>
+            </div>
+            <div class="flex gap-1.5" id="exchangeFilterPills">
+              <button onclick="filterExchanges('all')" class="px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white">All</button>
+              <button onclick="filterExchanges('active')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Active</button>
+              <button onclick="filterExchanges('completed')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Completed</button>
+              <button onclick="filterExchanges('pending')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Pending</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="glass-b rounded-2xl p-4 text-center"><div class="text-2xl font-extrabold text-white" id="countActiveEx">342</div><div class="text-xs mt-1" style="color:rgba(196,181,253,0.55)">Active</div></div>
+            <div class="glass-b rounded-2xl p-4 text-center"><div class="text-2xl font-extrabold text-white" id="countCompEx">1,204</div><div class="text-xs mt-1" style="color:rgba(196,181,253,0.55)">Completed</div></div>
+            <div class="glass-b rounded-2xl p-4 text-center"><div class="text-2xl font-extrabold text-white" id="countPendEx">87</div><div class="text-xs mt-1" style="color:rgba(196,181,253,0.55)">Pending</div></div>
+          </div>
+          <div class="space-y-3" id="exchangeMonitorList"></div>
+        </div>
+
+        <!-- ── REPORTS SECTION ── -->
+        <div id="sec-panel-reports" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Flagged Reports & Disputes</h2>
+              <p class="text-sm" style="color:rgba(196,181,253,0.55)">Review conduct violations, session disputes, and student complaints.</p>
+            </div>
+            <button onclick="clearAllReports()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-red-300 bg-red-900/30 border border-red-500/30 hover:bg-red-900/50 transition-all">
+              Dismiss All Pending
+            </button>
+          </div>
+          <div class="space-y-4" id="reportsList"></div>
+        </div>
+
+        <!-- ── SKILLS SECTION ── -->
+        <div id="sec-panel-skills" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Skills Registry</h2>
+              <p class="text-sm" style="color:rgba(196,181,253,0.55)">Manage and categorize all skills available for student exchange.</p>
+            </div>
+            <button onclick="openAddSkillModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md transition-all">+ Add New Skill</button>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="skillsGrid"></div>
+        </div>
+
+        <!-- ── SETTINGS SECTION ── -->
+        <div id="sec-panel-settings" class="hidden">
+          <h2 class="text-2xl font-extrabold text-white mb-1">Platform Settings</h2>
+          <p class="text-sm mb-6" style="color:rgba(196,181,253,0.55)">Configure platform behaviour, policies, and security settings.</p>
+          <div class="space-y-4">
+            <div class="glass-b rounded-2xl p-5">
+              <h3 class="font-bold text-white mb-4 text-sm">General Configuration</h3>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div><p class="text-sm font-semibold text-white">New Registrations</p><p class="text-xs" style="color:rgba(196,181,253,0.5)">Allow new campus students to register</p></div>
+                  <button onclick="toggleSetting(this, 'Student registration')" class="w-11 h-6 rounded-full relative transition-all bg-emerald-600 border border-emerald-400"><div class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-white transition-all"></div></button>
+                </div>
+                <div class="flex items-center justify-between" style="border-top:1px solid rgba(139,92,246,0.1); padding-top:12px">
+                  <div><p class="text-sm font-semibold text-white">Email Notifications & Live Dispatch</p><p class="text-xs" style="color:rgba(196,181,253,0.5)">Broadcast messages and session notifications</p></div>
+                  <button onclick="toggleSetting(this, 'Email notifications')" class="w-11 h-6 rounded-full relative transition-all bg-emerald-600 border border-emerald-400"><div class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-white transition-all"></div></button>
+                </div>
+                <div class="flex items-center justify-between" style="border-top:1px solid rgba(139,92,246,0.1); padding-top:12px">
+                  <div><p class="text-sm font-semibold text-white">Skill Verification Gate</p><p class="text-xs" style="color:rgba(196,181,253,0.5)">Require admin approval for custom student skill listings</p></div>
+                  <button onclick="toggleSetting(this, 'Skill verification')" class="w-11 h-6 rounded-full relative transition-all bg-purple-900/60 border border-purple-500/40"><div class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-all"></div></button>
+                </div>
+              </div>
+            </div>
+            <div class="danger-zone rounded-2xl p-5">
+              <h3 class="font-bold text-red-300 mb-3 text-sm">⚠ Danger Zone</h3>
+              <div class="flex items-center justify-between">
+                <div><p class="text-sm font-semibold text-white">Reset Shared Demonstration Storage</p><p class="text-xs text-red-300/60">Restores all student messages, exchanges, and data to default</p></div>
+                <button onclick="resetAllDemoData()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition-all shadow-md">Reset Data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MODALS ═══════════════════════ -->
+
+  <!-- Reply to Student Modal -->
+  <div id="modalReplyStudent" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-b rounded-3xl p-6 w-full max-w-lg border border-purple-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-purple-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Reply to Student Message</h3>
+        <button onclick="closeModal('modalReplyStudent')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <div class="p-3 rounded-xl bg-purple-900/20 border border-purple-500/30 mb-4">
+        <p class="text-xs font-bold text-purple-200" id="replyTargetStudent">Student: Alex Johnson</p>
+        <p class="text-[11px] text-purple-300/70" id="replyTargetSubject">Subject: Query</p>
+        <p class="text-xs text-slate-300 mt-1 italic" id="replyTargetBody">"..."</p>
+      </div>
+      <form onsubmit="handleSendReply(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Administrator Response</label>
+          <textarea id="replyContent" rows="4" placeholder="Type your response to the student..." required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none resize-none focus:border-purple-400"></textarea>
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" onclick="closeModal('modalReplyStudent')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 shadow-md">
+            Transmit Response to Student →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <div id="modalAddUser" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-b rounded-3xl p-6 w-full max-w-md border border-purple-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-purple-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Add New Student Account</h3>
+        <button onclick="closeModal('modalAddUser')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <form onsubmit="handleAddUser(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Full Name</label>
+          <input type="text" id="addUserName" placeholder="e.g. Kavya Mohan" required
+            class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Campus Email</label>
+          <input type="email" id="addUserEmail" placeholder="e.g. kavya.m@campus.edu" required
+            class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-purple-200/80 mb-1">Department</label>
+            <input type="text" id="addUserDept" placeholder="e.g. IT" required
+              class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-purple-200/80 mb-1">Year</label>
+            <input type="text" id="addUserYear" placeholder="e.g. 2nd" required
+              class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Key Skills</label>
+          <input type="text" id="addUserSkills" placeholder="e.g. Python, Flutter" required
+            class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+        </div>
+        <div class="flex gap-2 justify-end pt-3">
+          <button type="button" onclick="closeModal('modalAddUser')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md">Register Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Skill Modal -->
+  <div id="modalAddSkill" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-b rounded-3xl p-6 w-full max-w-md border border-purple-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-purple-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Add Skill to Registry</h3>
+        <button onclick="closeModal('modalAddSkill')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <form onsubmit="handleAddSkill(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Skill Name</label>
+          <input type="text" id="newSkillName" placeholder="e.g. Docker & Kubernetes" required
+            class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-purple-200/80 mb-1">Category</label>
+          <select id="newSkillCat" class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-purple-500/30 outline-none">
+            <option value="Programming">Programming</option>
+            <option value="Web">Web Development</option>
+            <option value="Design">Design & UI/UX</option>
+            <option value="AI & ML">AI & Machine Learning</option>
+            <option value="Electronics">Electronics & IoT</option>
+            <option value="Communication">Communication</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="newSkillTrend" class="rounded border-purple-500" />
+          <label for="newSkillTrend" class="text-xs text-purple-200">Mark as Trending on campus</label>
+        </div>
+        <div class="flex gap-2 justify-end pt-3">
+          <button type="button" onclick="closeModal('modalAddSkill')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md">Add to Registry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ LOGIC & SHARED STATE ═══════════════════════ -->
+  <script>
+    const STORAGE_MSG_KEY = 'skillbridge_shared_messages';
+    const STORAGE_REPORTS_KEY = 'skillbridge_shared_reports';
+    const STORAGE_EXCHANGES_KEY = 'skillbridge_shared_exchanges';
+    const STORAGE_USERS_KEY = 'skillbridge_shared_users';
+    const STORAGE_SKILLS_KEY = 'skillbridge_shared_skills';
+
+    function getStoredData(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch(e) {
+        return fallback;
+      }
+    }
+    function setStoredData(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {}
+    }
+
+    // Default Seed Data
+    let DEFAULT_USERS_DATA = [
+      { id:1, name:'Rahul Sharma',   email:'rahul.s@campus.edu',  dept:'IT',      year:'2nd', skills:'Java, C',       status:'Active',   verified:true,  avatar:'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=60&auto=format&fit=crop' },
+      { id:2, name:'Priya Sundaram', email:'priya.s@campus.edu',  dept:'CSE',     year:'3rd', skills:'UI/UX, Figma',  status:'Active',   verified:true,  avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&auto=format&fit=crop' },
+      { id:3, name:'Vikram Raman',   email:'vikram.r@campus.edu', dept:'AI & DS', year:'3rd', skills:'Python, ML',    status:'Active',   verified:true,  avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop' },
+      { id:4, name:'Ananya Patel',   email:'ananya.p@campus.edu', dept:'ECE',     year:'2nd', skills:'Arduino, IoT',  status:'Active',   verified:true,  avatar:'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=60&auto=format&fit=crop' },
+      { id:5, name:'Rohan Verma',    email:'rohan.v@campus.edu',  dept:'Mech',    year:'1st', skills:'AutoCAD',       status:'Flagged',  verified:false, avatar:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&auto=format&fit=crop' }
+    ];
+
+    let DEFAULT_REPORTS_DATA = [
+      { id:'REP-001', from:'Karthik S.', against:'Rohan Verma',      reason:'No-show for agreed 4 PM session twice without notifying partner.', status:'Pending Review', time:'2 hours ago', severity:'high' },
+      { id:'REP-002', from:'Priya S.',   against:'Anonymous User',   reason:'Inappropriate spam message in skill request description field.', status:'Investigating', time:'1 day ago', severity:'medium' },
+      { id:'REP-003', from:'Divya K.',   against:'Unknown Account',  reason:'Fake profile with misleading skill endorsements listed.', status:'Pending Review', time:'3 days ago', severity:'low' }
+    ];
+
+    let DEFAULT_SKILLS_DATA = [
+      { id:1, name:'Python', cat:'Programming', students:142, trend:true },
+      { id:2, name:'Web Development', cat:'Web', students:195, trend:true },
+      { id:3, name:'Java', cat:'Programming', students:128, trend:false },
+      { id:4, name:'UI/UX Design', cat:'Design', students:88, trend:true },
+      { id:5, name:'Machine Learning', cat:'AI & ML', students:76, trend:true },
+      { id:6, name:'C Programming', cat:'Programming', students:110, trend:false },
+      { id:7, name:'Arduino & IoT', cat:'Electronics', students:62, trend:true },
+      { id:8, name:'Graphic Design', cat:'Design', students:64, trend:false },
+      { id:9, name:'Public Speaking', cat:'Communication', students:45, trend:false }
+    ];
+
+    if (!localStorage.getItem(STORAGE_USERS_KEY)) setStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+    if (!localStorage.getItem(STORAGE_REPORTS_KEY)) setStoredData(STORAGE_REPORTS_KEY, DEFAULT_REPORTS_DATA);
+    if (!localStorage.getItem(STORAGE_SKILLS_KEY)) setStoredData(STORAGE_SKILLS_KEY, DEFAULT_SKILLS_DATA);
+
+    let activeReplyMessageId = null;
+
+    // ── REAL-TIME EVENT LISTENER ACROSS TABS ──
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_MSG_KEY || e.key === STORAGE_REPORTS_KEY || e.key === STORAGE_EXCHANGES_KEY) {
+        renderAllSections();
+        showToast('Real-time Sync', 'New student message or exchange data received from Student Portal!', 'info');
+      }
+    });
+
+    // ── TOAST HELPER ──
+    function showToast(title, msg, type='success') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const icon = type === 'success' ? '🛡️' : type === 'error' ? '❌' : 'ℹ️';
+      t.innerHTML = `
+        <span class="text-lg">${icon}</span>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-white">${title}</p>
+          <p class="text-[11px] text-purple-200/80">${msg}</p>
+        </div>
+      `;
+      c.appendChild(t);
+      setTimeout(() => {
+        t.style.animation = 'toastOut 0.3s forwards';
+        setTimeout(() => t.remove(), 300);
+      }, 3500);
+    }
+
+    // ── LOGIN / LOGOUT ──
+    function doAdminLogin(e) {
+      e.preventDefault();
+      const id = document.getElementById('adminId').value.trim();
+      if (!id) { alert('Enter your Admin ID'); return; }
+      doAdminDemo();
+    }
+    function doAdminDemo() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      renderAllSections();
+      switchSection('overview');
+      showToast('Admin Logged In', 'Full moderation and real-time control enabled.');
+    }
+    function doLogout() {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      showToast('Signed Out', 'Admin session terminated.', 'info');
+    }
+
+    // ── NAVIGATION ──
+    function switchSection(sec) {
+      document.querySelectorAll('[id^="sec-panel-"]').forEach(p => p.classList.add('hidden'));
+      const activePanel = document.getElementById('sec-panel-' + sec);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('nav-active');
+        b.style.color = 'rgba(196,181,253,0.8)';
+      });
+      const btn = document.getElementById('sec-' + sec);
+      if (btn) { btn.classList.add('nav-active'); btn.style.color='white'; }
+    }
+
+    // ── RENDER ALL SECTIONS ──
+    function renderAllSections() {
+      const users = getStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+      const reports = getStoredData(STORAGE_REPORTS_KEY, DEFAULT_REPORTS_DATA);
+      const skills = getStoredData(STORAGE_SKILLS_KEY, DEFAULT_SKILLS_DATA);
+      const messages = getStoredData(STORAGE_MSG_KEY, []);
+      const exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+
+      // Badges & Counters
+      const pendingReportCount = reports.filter(r => r.status !== 'Dismissed').length;
+      document.getElementById('statPendingReports').textContent = pendingReportCount;
+      document.getElementById('navReportCount').textContent = pendingReportCount;
+      document.getElementById('sidebarReportBadge').textContent = pendingReportCount;
+
+      document.getElementById('navMsgCount').textContent = messages.length;
+      document.getElementById('sidebarMsgBadge').textContent = messages.length;
+      document.getElementById('overviewMsgCount').textContent = messages.length;
+
+      document.getElementById('statTotalStudents').textContent = users.length + 1420;
+      document.getElementById('statSkillsListed').textContent = skills.length;
+      document.getElementById('statActiveExchanges').textContent = exchanges.filter(e => e.status === 'active').length + 340;
+
+      // 1. Overview Recent Users
+      document.getElementById('recentUsersBody').innerHTML = users.slice(0, 5).map(u => `
+        <tr class="trow transition-all" style="border-bottom:1px solid rgba(139,92,246,0.07)">
+          <td class="px-4 py-3 flex items-center gap-2">
+            <img src="${u.avatar}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+            <div><p class="font-semibold text-white">${u.name}</p><p style="color:rgba(196,181,253,0.5)">${u.email}</p></div>
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell" style="color:rgba(196,181,253,0.7)">${u.dept}</td>
+          <td class="px-4 py-3 hidden lg:table-cell" style="color:rgba(196,181,253,0.7)">${u.skills}</td>
+          <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold status-${u.status.toLowerCase()}">${u.status}</span></td>
+        </tr>`).join('');
+
+      // 2. Student Messages Section
+      document.getElementById('adminMessagesList').innerHTML = messages.length ? messages.map(m => `
+        <div class="glass-b rounded-2xl p-5 border border-purple-500/20">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+              <img src="${m.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop'}" class="w-10 h-10 rounded-xl object-cover ring-2 ring-purple-500/30">
+              <div>
+                <div class="flex items-center gap-2">
+                  <p class="font-bold text-white text-sm">${m.sender}</p>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-600/30 text-purple-300 border border-purple-500/30">${m.dept || 'Student'}</span>
+                  <span class="text-[10px] text-slate-400">· ${m.time}</span>
+                </div>
+                <p class="text-xs font-semibold text-purple-300 mt-0.5">${m.subject}</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold self-start ${m.status === 'Resolved' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
+              ${m.status || 'Pending Review'}
+            </span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/20 mb-3 text-xs text-purple-100 leading-relaxed">
+            "${m.body}"
+          </div>
+
+          ${m.reply ? `
+            <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 mb-3">
+              <p class="text-[11px] font-bold text-indigo-300 mb-1">🛡️ Response Sent by Admin:</p>
+              <p class="text-xs text-indigo-100">${m.reply.text}</p>
+            </div>
+          ` : ''}
+
+          <div class="flex flex-wrap gap-2 pt-1 border-t border-purple-500/10">
+            <button onclick="openReplyModal('${m.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-sm">
+              💬 Reply to ${m.sender.split(' ')[0]}
+            </button>
+            <button onclick="toggleMessageStatus('${m.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${m.status==='Resolved'?'bg-slate-800 text-slate-300':'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'} hover:opacity-80 transition-all">
+              ${m.status === 'Resolved' ? 'Mark Unresolved' : '✓ Mark Resolved'}
+            </button>
+            <button onclick="deleteStudentMessage('${m.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold text-red-300 hover:bg-red-500/20 transition-all">
+              Delete
+            </button>
+          </div>
+        </div>`).join('') : `<div class="glass-b rounded-2xl p-8 text-center text-slate-400 text-sm">No messages received yet. Messages sent from the Student Portal will display here instantly!</div>`;
+
+      // 3. Users Table
+      renderUsersTable(users);
+
+      // 4. Exchange Monitor
+      renderExchangesList(exchanges);
+
+      // 5. Reports List
+      renderReportsList(reports);
+
+      // 6. Skills Registry
+      document.getElementById('skillsGrid').innerHTML = skills.map(s => `
+        <div class="glass-b rounded-2xl p-4 perspective">
+          <div class="card-3d">
+            <div class="flex items-start justify-between mb-2">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold" style="background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.3); color:#c4b5fd">${s.cat}</span>
+              ${s.trend ? '<span style="color:#34d399; font-size:10px; font-weight:700">🔥 Trending</span>' : ''}
+            </div>
+            <p class="font-bold text-white text-sm mt-2">${s.name}</p>
+            <p class="text-xs mt-1" style="color:rgba(196,181,253,0.5)">${s.students || 85} students active</p>
+            <div class="mt-3 flex gap-1.5">
+              <button onclick="editSkill(${s.id})" class="px-2.5 py-1 rounded text-[10px] font-bold" style="background:rgba(16,185,129,0.15); color:#34d399">Edit</button>
+              <button onclick="removeSkillFromRegistry(${s.id})" class="px-2.5 py-1 rounded text-[10px] font-bold" style="background:rgba(239,68,68,0.12); color:#f87171">Remove</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ── USERS TABLE RENDER & SEARCH ──
+    function renderUsersTable(usersList) {
+      document.getElementById('usersTableBody').innerHTML = usersList.map(u => `
+        <tr class="trow transition-all" style="border-bottom:1px solid rgba(139,92,246,0.07)">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <img src="${u.avatar}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+              <div><p class="font-semibold text-white">${u.name}</p><p style="color:rgba(196,181,253,0.4)">${u.email}</p></div>
+            </div>
+          </td>
+          <td class="px-4 py-3" style="color:rgba(196,181,253,0.7)">${u.dept}</td>
+          <td class="px-4 py-3" style="color:rgba(196,181,253,0.7)">${u.year}</td>
+          <td class="px-4 py-3" style="color:rgba(196,181,253,0.7)">${u.skills}</td>
+          <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold status-${u.status.toLowerCase()}">${u.status}</span></td>
+          <td class="px-4 py-3">
+            <div class="flex gap-1.5">
+              <button onclick="toggleVerifyUser(${u.id})" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.25)">
+                ${u.status === 'Active' ? '✓ Verified' : 'Verify'}
+              </button>
+              <button onclick="toggleSuspendUser(${u.id})" class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all" style="background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.2)">
+                ${u.status === 'Suspended' ? 'Unsuspend' : 'Suspend'}
+              </button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    function filterUsersTable() {
+      const q = document.getElementById('userSearchInput').value.toLowerCase();
+      const users = getStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+      const filtered = users.filter(u => u.name.toLowerCase().includes(q) || u.dept.toLowerCase().includes(q) || u.skills.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+      renderUsersTable(filtered);
+    }
+
+    function toggleVerifyUser(id) {
+      const users = getStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+      const u = users.find(x => x.id === id);
+      if (u) {
+        u.status = 'Active';
+        u.verified = true;
+        setStoredData(STORAGE_USERS_KEY, users);
+        renderAllSections();
+        showToast('User Verified', `${u.name} is verified and active on SkillBridge.`);
+      }
+    }
+
+    function toggleSuspendUser(id) {
+      const users = getStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+      const u = users.find(x => x.id === id);
+      if (u) {
+        u.status = u.status === 'Suspended' ? 'Active' : 'Suspended';
+        setStoredData(STORAGE_USERS_KEY, users);
+        renderAllSections();
+        showToast('Status Updated', `${u.name} status changed to ${u.status}.`, 'info');
+      }
+    }
+
+    function handleAddUser(e) {
+      e.preventDefault();
+      const name = document.getElementById('addUserName').value.trim();
+      const email = document.getElementById('addUserEmail').value.trim();
+      const dept = document.getElementById('addUserDept').value.trim();
+      const year = document.getElementById('addUserYear').value.trim();
+      const skills = document.getElementById('addUserSkills').value.trim();
+
+      const users = getStoredData(STORAGE_USERS_KEY, DEFAULT_USERS_DATA);
+      users.unshift({
+        id: Date.now(),
+        name: name,
+        email: email,
+        dept: dept,
+        year: year,
+        skills: skills,
+        status: 'Active',
+        verified: true,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop'
+      });
+      setStoredData(STORAGE_USERS_KEY, users);
+      closeModal('modalAddUser');
+      renderAllSections();
+      showToast('Student Added', `${name} has been enrolled.`);
+    }
+
+    // ── REPLY TO STUDENT MESSAGE ──
+    function openReplyModal(msgId) {
+      activeReplyMessageId = msgId;
+      const msgs = getStoredData(STORAGE_MSG_KEY, []);
+      const m = msgs.find(x => x.id === msgId);
+      if (m) {
+        document.getElementById('replyTargetStudent').textContent = `Student: ${m.sender} (${m.dept || 'Campus'})`;
+        document.getElementById('replyTargetSubject').textContent = `Subject: ${m.subject}`;
+        document.getElementById('replyTargetBody').textContent = `"${m.body}"`;
+        document.getElementById('replyContent').value = '';
+        openModal('modalReplyStudent');
+      }
+    }
+
+    function handleSendReply(e) {
+      e.preventDefault();
+      const text = document.getElementById('replyContent').value.trim();
+      const msgs = getStoredData(STORAGE_MSG_KEY, []);
+      const m = msgs.find(x => x.id === activeReplyMessageId);
+      if (m) {
+        m.reply = {
+          text: text,
+          time: 'Just now by Admin'
+        };
+        m.status = 'Resolved';
+        setStoredData(STORAGE_MSG_KEY, msgs);
+        closeModal('modalReplyStudent');
+        renderAllSections();
+        showToast('Reply Broadcasted', `Your response was transmitted back to ${m.sender}!`);
+      }
+    }
+
+    function toggleMessageStatus(msgId) {
+      const msgs = getStoredData(STORAGE_MSG_KEY, []);
+      const m = msgs.find(x => x.id === msgId);
+      if (m) {
+        m.status = m.status === 'Resolved' ? 'Pending Review' : 'Resolved';
+        setStoredData(STORAGE_MSG_KEY, msgs);
+        renderAllSections();
+        showToast('Status Updated', `Message marked as ${m.status}`);
+      }
+    }
+
+    function deleteStudentMessage(msgId) {
+      if (confirm('Delete this message from the system?')) {
+        let msgs = getStoredData(STORAGE_MSG_KEY, []);
+        msgs = msgs.filter(x => x.id !== msgId);
+        setStoredData(STORAGE_MSG_KEY, msgs);
+        renderAllSections();
+        showToast('Message Deleted', 'Message removed from shared inbox.');
+      }
+    }
+
+    // ── EXCHANGES MONITOR ──
+    function renderExchangesList(exchanges) {
+      const sc = {active:'16,185,129', completed:'99,102,241', pending:'245,158,11'};
+      document.getElementById('exchangeMonitorList').innerHTML = exchanges.map(ex => `
+        <div class="glass-b rounded-2xl p-4 flex items-center gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(139,92,246,0.2)">
+            <svg class="w-5 h-5" style="color:#a78bfa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-white">${ex.partner || ex.s1 || 'Alex'} ⇄ ${ex.s2 || 'Student'}</p>
+            <p class="text-xs mt-0.5" style="color:rgba(196,181,253,0.55)">Teaching <strong style="color:#a78bfa">${ex.give}</strong> → Learning <strong style="color:#818cf8">${ex.get}</strong></p>
+          </div>
+          <div class="text-right flex items-center gap-3">
+            <div>
+              <span class="px-2 py-1 rounded-full text-[10px] font-bold text-white" style="background:rgba(${sc[ex.status]||'99,102,241'},0.25); border:1px solid rgba(${sc[ex.status]||'99,102,241'},0.35)">${ex.status.toUpperCase()}</span>
+              <p class="text-[10px] mt-1" style="color:rgba(196,181,253,0.4)">${ex.date || 'Recent'}</p>
+            </div>
+            <button onclick="cancelExchange('${ex.id}')" class="text-xs text-red-400 hover:text-red-300 font-bold px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20">End</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function filterExchanges(status) {
+      const exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+      if (status === 'all') {
+        renderExchangesList(exchanges);
+      } else {
+        renderExchangesList(exchanges.filter(e => e.status === status));
+      }
+    }
+
+    function cancelExchange(id) {
+      let exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+      exchanges = exchanges.filter(e => e.id !== id);
+      setStoredData(STORAGE_EXCHANGES_KEY, exchanges);
+      renderAllSections();
+      showToast('Exchange Closed', 'Exchange removed from live tracking.');
+    }
+
+    // ── REPORTS ──
+    function renderReportsList(reports) {
+      const sevColor = {high:'239,68,68', medium:'245,158,11', low:'99,102,241'};
+      document.getElementById('reportsList').innerHTML = reports.length ? reports.map(r => `
+        <div class="glass-b rounded-2xl p-5" style="border-left:3px solid rgba(${sevColor[r.severity]||'239,68,68'},0.6)">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold" style="color:rgba(196,181,253,0.5)">${r.id}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-white status-${r.status === 'Pending Review' ? 'pending' : r.status === 'Investigating' ? 'investigating' : 'active'}">${r.status}</span>
+              </div>
+              <p class="text-sm font-bold text-white">Target: ${r.against}</p>
+              <p class="text-xs mt-0.5" style="color:rgba(196,181,253,0.55)">Filed by ${r.from} · ${r.time}</p>
+            </div>
+          </div>
+          <p class="text-xs p-3 rounded-xl mb-3" style="color:rgba(196,181,253,0.8); background:rgba(139,92,246,0.07); border:1px solid rgba(139,92,246,0.12)">"${r.reason}"</p>
+          <div class="flex gap-2">
+            <button onclick="updateReportStatus('${r.id}', 'Dismissed')" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.3)">Dismiss</button>
+            <button onclick="updateReportStatus('${r.id}', 'Investigating')" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.3)">Investigate</button>
+            <button onclick="updateReportStatus('${r.id}', 'Warned')" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:rgba(139,92,246,0.2); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3)">Issue Formal Warning</button>
+          </div>
+        </div>`).join('') : `<p class="text-xs text-slate-400 py-6 text-center">No active reports. Campus environment is safe!</p>`;
+    }
+
+    function updateReportStatus(id, newStatus) {
+      const reports = getStoredData(STORAGE_REPORTS_KEY, DEFAULT_REPORTS_DATA);
+      const r = reports.find(x => x.id === id);
+      if (r) {
+        r.status = newStatus;
+        setStoredData(STORAGE_REPORTS_KEY, reports);
+        renderAllSections();
+        showToast('Report Updated', `Report ${id} marked as ${newStatus}.`);
+      }
+    }
+
+    function clearAllReports() {
+      if (confirm('Clear and dismiss all pending reports?')) {
+        setStoredData(STORAGE_REPORTS_KEY, []);
+        renderAllSections();
+        showToast('Reports Cleared', 'All reports have been dismissed.');
+      }
+    }
+
+    // ── SKILLS REGISTRY ACTIONS ──
+    function handleAddSkill(e) {
+      e.preventDefault();
+      const name = document.getElementById('newSkillName').value.trim();
+      const cat = document.getElementById('newSkillCat').value;
+      const trend = document.getElementById('newSkillTrend').checked;
+
+      const skills = getStoredData(STORAGE_SKILLS_KEY, DEFAULT_SKILLS_DATA);
+      skills.unshift({
+        id: Date.now(),
+        name: name,
+        cat: cat,
+        students: 1,
+        trend: trend
+      });
+      setStoredData(STORAGE_SKILLS_KEY, skills);
+      closeModal('modalAddSkill');
+      renderAllSections();
+      showToast('Skill Registered', `"${name}" added to campus skills catalog.`);
+    }
+
+    function editSkill(id) {
+      const skills = getStoredData(STORAGE_SKILLS_KEY, DEFAULT_SKILLS_DATA);
+      const s = skills.find(x => x.id === id);
+      if (s) {
+        const newName = prompt('Update skill name:', s.name);
+        if (newName && newName.trim()) {
+          s.name = newName.trim();
+          setStoredData(STORAGE_SKILLS_KEY, skills);
+          renderAllSections();
+          showToast('Skill Updated', `Skill renamed to "${newName}".`);
+        }
+      }
+    }
+
+    function removeSkillFromRegistry(id) {
+      if (confirm('Remove this skill from the platform registry?')) {
+        let skills = getStoredData(STORAGE_SKILLS_KEY, DEFAULT_SKILLS_DATA);
+        skills = skills.filter(x => x.id !== id);
+        setStoredData(STORAGE_SKILLS_KEY, skills);
+        renderAllSections();
+        showToast('Skill Removed', 'Skill deleted from registry.');
+      }
+    }
+
+    // ── SETTINGS ACTIONS ──
+    function toggleSetting(btn, label) {
+      const knob = btn.querySelector('div');
+      const isOn = btn.classList.contains('bg-emerald-600');
+      if (isOn) {
+        btn.classList.remove('bg-emerald-600', 'border-emerald-400');
+        btn.classList.add('bg-purple-900/60', 'border-purple-500/40');
+        knob.style.transform = 'translateX(0px)';
+        knob.style.left = '2px';
+        knob.style.right = 'auto';
+        showToast('Setting Disabled', `${label} turned OFF.`);
+      } else {
+        btn.classList.remove('bg-purple-900/60', 'border-purple-500/40');
+        btn.classList.add('bg-emerald-600', 'border-emerald-400');
+        knob.style.transform = 'translateX(20px)';
+        showToast('Setting Enabled', `${label} turned ON.`);
+      }
+    }
+
+    function resetAllDemoData() {
+      if (confirm('Are you sure you want to reset all mock storage?')) {
+        localStorage.removeItem(STORAGE_MSG_KEY);
+        localStorage.removeItem(STORAGE_REPORTS_KEY);
+        localStorage.removeItem(STORAGE_EXCHANGES_KEY);
+        localStorage.removeItem(STORAGE_USERS_KEY);
+        localStorage.removeItem(STORAGE_SKILLS_KEY);
+        showToast('Reset Complete', 'Reloading default database...', 'info');
+        setTimeout(() => location.reload(), 800);
+      }
+    }
+
+    // ── MODAL HELPERS ──
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+    }
+    function openAddUserModal() { openModal('modalAddUser'); }
+    function openAddSkillModal() { openModal('modalAddSkill'); }
+  </script>
+</body>
+</html>

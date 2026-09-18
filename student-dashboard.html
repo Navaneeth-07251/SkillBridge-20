@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillBridge | Student Dashboard</title>
+  <meta name="description" content="Student skill exchange dashboard — track sessions, messages, reputation and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 900:'#312e81', 950:'#1e1b4b' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #080720;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 10% 0%, rgba(99,102,241,0.4) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 100%, rgba(139,92,246,0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.08) 0%, transparent 70%);
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+
+    .perspective { perspective: 1200px; }
+    .card-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
+      will-change: transform;
+    }
+    .card-3d:hover {
+      transform: rotateY(-5deg) rotateX(3deg) translateZ(10px) scale(1.02);
+      box-shadow: 12px 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(99,102,241,0.3);
+    }
+    .card-3d-right:hover {
+      transform: rotateY(5deg) rotateX(3deg) translateZ(10px) scale(1.02);
+      box-shadow: -12px 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(99,102,241,0.3);
+    }
+
+    @keyframes float3d {
+      0%, 100% { transform: translateY(0px) rotateX(0deg); }
+      50%      { transform: translateY(-8px) rotateX(2deg); }
+    }
+    .float-3d { animation: float3d 5s ease-in-out infinite; }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
+      50%       { box-shadow: 0 0 30px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.1); }
+    }
+    .glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .glass-bright {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .glass-nav {
+      background: rgba(8,7,32,0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+    }
+
+    .flip-container { perspective: 1000px; }
+    .flip-card {
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 9999px;
+      height: 6px;
+      transition: width 0.8s ease;
+      box-shadow: 0 0 8px rgba(99,102,241,0.5);
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 999px; }
+
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    @keyframes orbDrift {
+      0%   { transform: translate(0,0) scale(1); }
+      33%  { transform: translate(30px,-20px) scale(1.05); }
+      66%  { transform: translate(-15px,15px) scale(0.97); }
+      100% { transform: translate(0,0) scale(1); }
+    }
+    .orb { animation: orbDrift 20s ease-in-out infinite; pointer-events: none; }
+
+    @keyframes fadeInUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.22,0.61,0.36,1) both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    .nav-active {
+      background: linear-gradient(135deg, rgba(99,102,241,0.85), rgba(139,92,246,0.75)) !important;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+      color: white !important;
+    }
+
+    /* Toast styling */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 280px;
+      max-width: 380px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(15, 14, 46, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(99,102,241,0.25);
+      backdrop-filter: blur(16px);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(20px) scale(0.95); }
+    }
+  </style>
+</head>
+<body class="grid-bg min-h-screen text-slate-100 flex flex-col">
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Background orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="orb absolute w-96 h-96 rounded-full" style="background:radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%); top:-10%; left:-5%;"></div>
+    <div class="orb absolute w-80 h-80 rounded-full" style="background:radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%); bottom:5%; right:5%; animation-delay:-7s;"></div>
+    <div class="orb absolute w-64 h-64 rounded-full" style="background:radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); bottom:30%; left:35%; animation-delay:-14s;"></div>
+  </div>
+
+  <!-- ═══════════════════════ LOGIN SCREEN ═══════════════════════ -->
+  <div id="loginScreen" class="relative z-10 min-h-screen flex items-center justify-center p-4">
+    <div class="flip-container w-full max-w-md">
+      <div class="flip-card" id="loginFlipCard">
+        <div class="flip-front">
+          <div class="glass-bright rounded-3xl p-8 shadow-2xl fade-in-up">
+            <!-- Logo -->
+            <div class="flex items-center justify-center mb-8">
+              <div class="perspective">
+                <div class="float-3d w-14 h-14 rounded-2xl flex items-center justify-center mr-3" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 8px 24px rgba(99,102,241,0.5)">
+                  <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                </div>
+              </div>
+              <div>
+                <h1 class="text-2xl font-extrabold text-white">Skill<span style="color:#818cf8">Bridge</span></h1>
+                <p class="text-xs text-indigo-300/70 font-medium">Student Portal</p>
+              </div>
+            </div>
+
+            <h2 class="text-xl font-bold text-white text-center mb-1">Welcome Back!</h2>
+            <p class="text-sm text-indigo-200/60 text-center mb-6">Sign in to your student account</p>
+
+            <form onsubmit="doStudentLogin(event)">
+              <div class="mb-4">
+                <label class="block text-xs font-semibold text-indigo-200/80 mb-1.5 uppercase tracking-wider">Email / Roll Number</label>
+                <input type="text" id="studentEmail" placeholder="e.g. alex@campus.edu" value="alex@campus.edu"
+                  class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-indigo-300/40 outline-none transition-all focus:ring-2 focus:ring-indigo-500"
+                  style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3);" />
+              </div>
+              <div class="mb-6">
+                <label class="block text-xs font-semibold text-indigo-200/80 mb-1.5 uppercase tracking-wider">Password</label>
+                <input type="password" id="studentPass" placeholder="••••••••" value="student123"
+                  class="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-indigo-300/40 outline-none transition-all focus:ring-2 focus:ring-indigo-500"
+                  style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3);" />
+              </div>
+              <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90 active:scale-95"
+                style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 8px 24px rgba(99,102,241,0.45)">
+                Sign In to Dashboard →
+              </button>
+            </form>
+
+            <div class="mt-5 pt-5" style="border-top:1px solid rgba(99,102,241,0.2)">
+              <p class="text-xs text-indigo-300/50 text-center mb-3">Quick select account</p>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="quickLogin('alex')" class="py-2 px-2 rounded-xl text-xs font-bold text-indigo-200 hover:text-white transition-all" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.2)">Alex J.<br><span class="text-[10px] opacity-60">IT 2nd Yr</span></button>
+                <button onclick="quickLogin('rahul')" class="py-2 px-2 rounded-xl text-xs font-bold text-indigo-200 hover:text-white transition-all" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.2)">Rahul S.<br><span class="text-[10px] opacity-60">IT 2nd Yr</span></button>
+                <button onclick="quickLogin('priya')" class="py-2 px-2 rounded-xl text-xs font-bold text-indigo-200 hover:text-white transition-all" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.2)">Priya S.<br><span class="text-[10px] opacity-60">CSE 3rd Yr</span></button>
+              </div>
+            </div>
+
+            <div class="mt-5 flex items-center justify-center text-xs">
+              <a href="../index.html" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-1">← Back to Main Site</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ DASHBOARD SCREEN ═══════════════════════ -->
+  <div id="dashboardScreen" class="hidden relative z-10 min-h-screen flex flex-col">
+
+    <!-- Top Navbar -->
+    <header class="glass-nav sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 4px 12px rgba(99,102,241,0.4)">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+        </div>
+        <div>
+          <span class="font-extrabold text-white">Skill<span style="color:#818cf8">Bridge</span></span>
+          <span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-indigo-300" style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.3)">Student</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Message Admin Quick Trigger Button -->
+        <button onclick="openMessageModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/30 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Message Admin</span>
+        </button>
+
+        <!-- Messages tab button with badge -->
+        <button onclick="switchTab('messages')" title="Messages & Admin Support" class="relative w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center cursor-pointer hover:bg-indigo-500/30 transition-all border border-indigo-500/30">
+          <svg class="w-4 h-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span id="unreadMsgBadge" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center shadow-sm">1</span>
+        </button>
+
+        <div id="navAvatar" class="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-indigo-500/50 cursor-pointer"></div>
+        <button onclick="doLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold text-red-300 hover:text-red-200 transition-all" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2)">Logout</button>
+      </div>
+    </header>
+
+    <div class="flex flex-1 max-w-7xl w-full mx-auto px-4 py-6 gap-6">
+      <!-- Sidebar -->
+      <aside class="w-56 flex-shrink-0 hidden lg:block">
+        <div class="glass rounded-2xl p-4 sticky top-24">
+          <div id="sidebarUserCard" class="mb-5 p-3 rounded-xl" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.2)"></div>
+          <nav class="space-y-1">
+            <button onclick="switchTab('overview')" id="tab-overview" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg> Overview
+            </button>
+            <button onclick="switchTab('skills')" id="tab-skills" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> My Skills
+            </button>
+            <button onclick="switchTab('exchanges')" id="tab-exchanges" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg> Exchanges
+            </button>
+            <button onclick="switchTab('sessions')" id="tab-sessions" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Sessions
+            </button>
+            <button onclick="switchTab('messages')" id="tab-messages" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Messages & Admin
+              <span id="sidebarMsgBadge" class="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white">Live</span>
+            </button>
+            <button onclick="switchTab('reputation')" id="tab-reputation" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-200 hover:text-white transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Reputation
+            </button>
+          </nav>
+          <div class="mt-4 pt-4" style="border-top:1px solid rgba(99,102,241,0.15)">
+            <a href="../index.html" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-indigo-400 hover:text-indigo-200 transition-all">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Main Site
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 min-w-0">
+
+        <!-- ── OVERVIEW TAB ── -->
+        <div id="panel-overview">
+          <div class="flex items-center justify-between mb-2 fade-in-up">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white">Welcome back, <span id="welcomeName" style="color:#818cf8">Student</span> 👋</h2>
+              <p class="text-sm text-indigo-300/60">Here's your live skill exchange activity and notifications.</p>
+            </div>
+            <button onclick="openMessageModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+              <span>+ Help / Message Admin</span>
+            </button>
+          </div>
+
+          <!-- 3D Stat Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-6 perspective">
+            <div class="card-3d glow-pulse glass-bright rounded-2xl p-5 fade-in-up delay-1">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.3))">
+                <svg class="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statExchanges">14</div>
+              <div class="text-xs text-indigo-300/60 mt-1 font-medium">Total Exchanges</div>
+            </div>
+            <div class="card-3d-right glow-pulse glass-bright rounded-2xl p-5 fade-in-up delay-2">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:linear-gradient(135deg,rgba(16,185,129,0.25),rgba(5,150,105,0.2))">
+                <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statSessions">12</div>
+              <div class="text-xs text-emerald-300/60 mt-1 font-medium">Sessions Done</div>
+            </div>
+            <div class="card-3d glow-pulse glass-bright rounded-2xl p-5 fade-in-up delay-3">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(217,119,6,0.2))">
+                <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statRating">4.9</div>
+              <div class="text-xs text-amber-300/60 mt-1 font-medium">Reputation Score</div>
+            </div>
+            <div class="card-3d-right glow-pulse glass-bright rounded-2xl p-5 fade-in-up">
+              <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style="background:linear-gradient(135deg,rgba(236,72,153,0.25),rgba(219,39,119,0.2))">
+                <svg class="w-5 h-5 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+              </div>
+              <div class="text-3xl font-extrabold text-white" id="statVotes">38</div>
+              <div class="text-xs text-pink-300/60 mt-1 font-medium">Helpful Votes</div>
+            </div>
+          </div>
+
+          <!-- Skills & Pending -->
+          <div class="grid lg:grid-cols-2 gap-5">
+            <!-- Skills I can teach -->
+            <div class="glass-bright rounded-2xl p-5 fade-in-up">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-indigo-400 inline-block"></span> Skills I Can Teach
+                </h3>
+                <button onclick="promptAddSkill('teach')" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">+ Add</button>
+              </div>
+              <div class="space-y-3" id="teachSkillsList"></div>
+            </div>
+
+            <!-- Pending Requests -->
+            <div class="glass-bright rounded-2xl p-5 fade-in-up delay-2">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Pending Requests
+                  <span id="pendingRequestsCountBadge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white bg-indigo-600">2</span>
+                </h3>
+                <button onclick="switchTab('exchanges')" class="text-xs text-indigo-400 hover:text-indigo-300">View All</button>
+              </div>
+              <div class="space-y-3" id="pendingRequestsList"></div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="glass-bright rounded-2xl p-5 mt-5 fade-in-up delay-3">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Recent Activity
+            </h3>
+            <div class="space-y-3" id="recentActivityList"></div>
+          </div>
+        </div>
+
+        <!-- ── SKILLS TAB ── -->
+        <div id="panel-skills" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">My Skills Profile</h2>
+              <p class="text-sm text-indigo-300/60">Manage what you teach and what you want to learn.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="promptAddSkill('teach')" class="px-3 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all">+ Add Teaching Skill</button>
+              <button onclick="promptAddSkill('learn')" class="px-3 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all">+ Add Learning Skill</button>
+            </div>
+          </div>
+          <div class="grid lg:grid-cols-2 gap-5">
+            <div class="glass-bright rounded-2xl p-6">
+              <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:#10b981">TEACHING</span> Skills I Offer
+              </h3>
+              <div class="space-y-3" id="teachSkillsFull"></div>
+            </div>
+            <div class="glass-bright rounded-2xl p-6">
+              <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:#6366f1">LEARNING</span> Skills I Want
+              </h3>
+              <div class="space-y-3" id="learnSkillsFull"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── EXCHANGES TAB ── -->
+        <div id="panel-exchanges" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Exchange History</h2>
+              <p class="text-sm text-indigo-300/60">All your past and ongoing skill swaps.</p>
+            </div>
+            <button onclick="openNewExchangeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all">+ Propose Exchange</button>
+          </div>
+          <div class="space-y-3" id="exchangeList"></div>
+        </div>
+
+        <!-- ── SESSIONS TAB ── -->
+        <div id="panel-sessions" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Upcoming Sessions</h2>
+              <p class="text-sm text-indigo-300/60">Your scheduled skill exchange meetings.</p>
+            </div>
+            <button onclick="openScheduleSessionModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all">+ Schedule Session</button>
+          </div>
+          <div class="grid lg:grid-cols-2 gap-4" id="sessionCards"></div>
+        </div>
+
+        <!-- ── MESSAGES & ADMIN SUPPORT TAB ── -->
+        <div id="panel-messages" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Messages & Admin Support</h2>
+              <p class="text-sm text-indigo-300/60">Direct communication with campus administration and student peers.</p>
+            </div>
+            <button onclick="openMessageModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md transition-all">
+              + Compose Message to Admin
+            </button>
+          </div>
+
+          <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Left: Message to Admin Box -->
+            <div class="lg:col-span-1 glass-bright rounded-2xl p-5 flex flex-col">
+              <h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span> Send to Admin / Helpdesk
+              </h3>
+              <p class="text-xs text-indigo-300/70 mb-4">Any message submitted here will be sent directly into the Admin Portal in real time.</p>
+              
+              <form onsubmit="handleSendAdminMessage(event)" class="space-y-3 flex-1 flex flex-col">
+                <div>
+                  <label class="block text-[11px] font-semibold text-indigo-200/80 mb-1">Category</label>
+                  <select id="msgCategory" class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none">
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Conduct Violation">Report Misconduct / Violation</option>
+                    <option value="Skill Verification">Skill Verification Request</option>
+                    <option value="Technical Issue">Platform Bug / Tech Issue</option>
+                    <option value="Exchange Conflict">Exchange Partner Issue</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-indigo-200/80 mb-1">Subject</label>
+                  <input type="text" id="msgSubject" placeholder="Brief summary of your request" required
+                    class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none placeholder-indigo-300/30 focus:border-indigo-400" />
+                </div>
+                <div class="flex-1 flex flex-col">
+                  <label class="block text-[11px] font-semibold text-indigo-200/80 mb-1">Message Details</label>
+                  <textarea id="msgBody" rows="4" placeholder="Explain your query, report, or issue..." required
+                    class="w-full flex-1 px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none placeholder-indigo-300/30 resize-none focus:border-indigo-400"></textarea>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 transition-all shadow-md">
+                  🚀 Send Message to Admin
+                </button>
+              </form>
+            </div>
+
+            <!-- Right: Message Stream / Feed -->
+            <div class="lg:col-span-2 glass-bright rounded-2xl p-5 flex flex-col">
+              <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Real-time Message History & Admin Responses
+                </h3>
+                <span class="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Sync Active
+                </span>
+              </div>
+              <div class="space-y-3 flex-1 overflow-y-auto max-h-[460px] pr-1" id="messagesFeedList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── REPUTATION TAB ── -->
+        <div id="panel-reputation" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white mb-1">Reputation & Reviews</h2>
+              <p class="text-sm text-indigo-300/60">Your campus credibility score and peer feedback.</p>
+            </div>
+            <button onclick="openLeaveReviewModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all">+ Add Peer Review</button>
+          </div>
+          <div class="glass-bright rounded-2xl p-6 mb-5">
+            <div class="flex flex-col md:flex-row items-center gap-6">
+              <div class="text-center px-4">
+                <div class="text-5xl font-extrabold text-white" id="repScore">4.9</div>
+                <div class="flex justify-center gap-0.5 mt-1">
+                  <span class="text-amber-400 text-lg">★★★★★</span>
+                </div>
+                <div class="text-xs text-indigo-300/50 mt-1">Overall Peer Rating</div>
+              </div>
+              <div class="flex-1 w-full space-y-3">
+                <div><div class="flex justify-between text-xs text-indigo-300/70 mb-1"><span>Communication & Clarity</span><span class="font-bold text-white">4.9</span></div><div class="h-2 rounded-full bg-slate-800"><div class="progress-bar" style="width:98%"></div></div></div>
+                <div><div class="flex justify-between text-xs text-indigo-300/70 mb-1"><span>Subject Knowledge Depth</span><span class="font-bold text-white">5.0</span></div><div class="h-2 rounded-full bg-slate-800"><div class="progress-bar" style="width:100%"></div></div></div>
+                <div><div class="flex justify-between text-xs text-indigo-300/70 mb-1"><span>Punctuality & Reliability</span><span class="font-bold text-white">4.8</span></div><div class="h-2 rounded-full bg-slate-800"><div class="progress-bar" style="width:96%"></div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-4" id="reviewList"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MODALS ═══════════════════════ -->
+
+  <!-- Compose Message to Admin Modal -->
+  <div id="modalAdminMessage" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-bright rounded-3xl p-6 w-full max-w-lg border border-indigo-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-600/30 flex items-center justify-center text-purple-300">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-white">Direct Message to Campus Admin</h3>
+        </div>
+        <button onclick="closeModal('modalAdminMessage')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <p class="text-xs text-indigo-200/70 mb-4">This message will immediately appear in the live Admin Control Panel for resolution.</p>
+      <form onsubmit="handleSendAdminMessageModal(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Subject</label>
+          <input type="text" id="modalMsgSubject" placeholder="e.g. Inappropriate conduct during Java session" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none focus:border-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Category</label>
+          <select id="modalMsgCategory" class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none">
+            <option value="Conduct Violation">Report Student / Misconduct</option>
+            <option value="General Inquiry">General Campus Inquiry</option>
+            <option value="Skill Verification">Skill Verification Request</option>
+            <option value="Exchange Conflict">Exchange Conflict / Dispute</option>
+            <option value="Technical Issue">Platform Feature / Technical Bug</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Message Content</label>
+          <textarea id="modalMsgBody" rows="4" placeholder="Detail your message here..." required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none resize-none focus:border-indigo-400"></textarea>
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" onclick="closeModal('modalAdminMessage')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5 transition-all">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 transition-all shadow-md">
+            Send to Admin Portal →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Virtual Room / Join Session Modal -->
+  <div id="modalLiveSession" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="glass-bright rounded-3xl p-6 w-full max-w-2xl border border-indigo-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+          <div>
+            <h3 class="text-base font-bold text-white" id="sessionModalTitle">Interactive Session Room</h3>
+            <p class="text-xs text-indigo-300/70" id="sessionModalTopic">Topic: C Programming – Pointers</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modalLiveSession')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <!-- Mock Video Grid -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="relative bg-slate-900/90 rounded-2xl h-44 flex items-center justify-center border border-indigo-500/20 overflow-hidden">
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto rounded-full bg-indigo-600/30 flex items-center justify-center text-xl mb-1">👨‍🎓</div>
+            <p class="text-xs font-bold text-white" id="sessionModalPartner">Partner</p>
+            <span class="text-[10px] text-emerald-400 font-semibold">● Camera Active</span>
+          </div>
+          <span class="absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded bg-black/60 text-white">Peer Video</span>
+        </div>
+        <div class="relative bg-slate-900/90 rounded-2xl h-44 flex items-center justify-center border border-indigo-500/20 overflow-hidden">
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto rounded-full bg-purple-600/30 flex items-center justify-center text-xl mb-1">🎓</div>
+            <p class="text-xs font-bold text-white">You (Alex)</p>
+            <span class="text-[10px] text-emerald-400 font-semibold">● Mic On</span>
+          </div>
+          <span class="absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded bg-black/60 text-white">Your Feed</span>
+        </div>
+      </div>
+
+      <!-- Session Notes Pad -->
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Live Collaborative Notes & Code Pad</label>
+        <textarea rows="3" class="w-full px-3 py-2 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none font-mono" placeholder="// Share code snippets, links, or notes with your exchange partner here..."></textarea>
+      </div>
+
+      <!-- Session Controls -->
+      <div class="flex items-center justify-between pt-2 border-t border-indigo-500/20">
+        <div class="flex gap-2">
+          <button onclick="showToast('Microphone', 'Microphone muted/unmuted', 'info')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700">🎤 Mute</button>
+          <button onclick="showToast('Video', 'Camera feed toggled', 'info')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700">📹 Camera</button>
+          <button onclick="showToast('Screen Share', 'Screen sharing started', 'info')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700">💻 Share Screen</button>
+        </div>
+        <button onclick="endSessionCall()" class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-500 transition-all">
+          End Session Call
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Propose Exchange Modal -->
+  <div id="modalNewExchange" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-bright rounded-3xl p-6 w-full max-w-md border border-indigo-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Propose Skill Exchange</h3>
+        <button onclick="closeModal('modalNewExchange')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <form onsubmit="handleCreateExchange(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Partner Name / Email</label>
+          <input type="text" id="newExPartner" placeholder="e.g. Rohan Verma" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Skill You Will Teach</label>
+          <input type="text" id="newExGive" placeholder="e.g. Java OOP" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Skill You Want to Learn</label>
+          <input type="text" id="newExGet" placeholder="e.g. AutoCAD & 3D Modeling" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" onclick="closeModal('modalNewExchange')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md">Send Proposal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Schedule Session Modal -->
+  <div id="modalScheduleSession" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-bright rounded-3xl p-6 w-full max-w-md border border-indigo-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Schedule Peer Session</h3>
+        <button onclick="closeModal('modalScheduleSession')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <form onsubmit="handleScheduleSession(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Exchange Partner</label>
+          <input type="text" id="sessionPartnerInput" placeholder="e.g. Ananya Patel" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Topic / Agenda</label>
+          <input type="text" id="sessionTopicInput" placeholder="e.g. Data Structures & Graph Algorithms" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Date & Time</label>
+          <input type="text" id="sessionDateInput" placeholder="e.g. Thursday at 4:00 PM" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Location / Mode</label>
+          <input type="text" id="sessionLocationInput" placeholder="e.g. SkillBridge Virtual Room / Central Library" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" onclick="closeModal('modalScheduleSession')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md">Confirm Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Peer Review Modal -->
+  <div id="modalLeaveReview" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-bright rounded-3xl p-6 w-full max-w-md border border-indigo-500/40 shadow-2xl fade-in-up">
+      <div class="flex items-center justify-between mb-4 border-b border-indigo-500/20 pb-3">
+        <h3 class="text-base font-bold text-white">Leave Feedback for Peer</h3>
+        <button onclick="closeModal('modalLeaveReview')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <form onsubmit="handleLeaveReview(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Student Partner</label>
+          <input type="text" id="reviewPartner" placeholder="e.g. Priya Sundaram" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Skill Evaluated</label>
+          <input type="text" id="reviewSkill" placeholder="e.g. UI/UX Figma Design" required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Rating (1 to 5 Stars)</label>
+          <select id="reviewRating" class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none">
+            <option value="5">⭐⭐⭐⭐⭐ (5 - Exceptional)</option>
+            <option value="4">⭐⭐⭐⭐ (4 - Very Good)</option>
+            <option value="3">⭐⭐⭐ (3 - Good)</option>
+            <option value="2">⭐⭐ (2 - Fair)</option>
+            <option value="1">⭐ (1 - Needs Improvement)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-indigo-200/80 mb-1">Comment & Feedback</label>
+          <textarea id="reviewComment" rows="3" placeholder="Share your experience working with this peer..." required
+            class="w-full px-4 py-2.5 rounded-xl text-xs text-white bg-slate-900/80 border border-indigo-500/30 outline-none resize-none"></textarea>
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" onclick="closeModal('modalLeaveReview')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/5">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 shadow-md">Post Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ LOGIC & SHARED STATE ═══════════════════════ -->
+  <script>
+    // ── SHARED LOCALSTORAGE SYNC KEYS ──
+    const STORAGE_MSG_KEY = 'skillbridge_shared_messages';
+    const STORAGE_REPORTS_KEY = 'skillbridge_shared_reports';
+    const STORAGE_EXCHANGES_KEY = 'skillbridge_shared_exchanges';
+    const STORAGE_SESSIONS_KEY = 'skillbridge_shared_sessions';
+    const STORAGE_REVIEWS_KEY = 'skillbridge_shared_reviews';
+    const STORAGE_STUDENTS_KEY = 'skillbridge_shared_students';
+
+    // ── INITIAL DATA ──
+    const DEFAULT_USERS = {
+      alex:  { name:'Alex Johnson', dept:'Information Technology', year:'2nd Year', rating:4.9, exchanges:14, sessions:12, votes:38, avatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop', teach:['Java','Web Development','C Programming','Git & GitHub'], learn:['Python','UI/UX Design','Machine Learning'] },
+      rahul: { name:'Rahul Sharma', dept:'Information Technology', year:'2nd Year', rating:4.9, exchanges:11, sessions:9,  votes:24, avatar:'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop', teach:['Java','C Programming','HTML & CSS'], learn:['Python','UI/UX Design'] },
+      priya: { name:'Priya Sundaram', dept:'Computer Science', year:'3rd Year', rating:5.0, exchanges:18, sessions:15, votes:41, avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop', teach:['UI/UX Design','Figma','Graphic Design'], learn:['Java','Web Development'] }
+    };
+
+    let currentUser = null;
+    let activeTab = 'overview';
+
+    // Initialize or load shared storage
+    function getStoredData(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch(e) {
+        return fallback;
+      }
+    }
+    function setStoredData(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {}
+    }
+
+    // Default Seed Data
+    if (!localStorage.getItem(STORAGE_MSG_KEY)) {
+      const initialMsgs = [
+        { id:'MSG-101', sender:'Alex Johnson', senderAvatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop', role:'Student', category:'General Inquiry', subject:'Java Mentorship Program Questions', body:'Hi Admin, I wanted to ask if we can earn extra campus skill badges for conducting 15+ peer mentoring sessions this semester.', time:'10 mins ago', status:'New', reply:null },
+        { id:'MSG-100', sender:'Campus Admin Team', senderAvatar:'', role:'Admin', category:'Broadcast', subject:'Welcome to SkillBridge Peer Exchange', body:'Welcome Alex! If you face any issues with session scheduling or partner conduct, feel free to report them here.', time:'Yesterday', status:'Resolved', reply:null }
+      ];
+      setStoredData(STORAGE_MSG_KEY, initialMsgs);
+    }
+
+    if (!localStorage.getItem(STORAGE_EXCHANGES_KEY)) {
+      const initialEx = [
+        { id:'EX-1', partner:'Divya Krishnan', avatar:'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=80&auto=format&fit=crop', give:'Java', get:'Video Editing', status:'completed', date:'Last week', rating:5 },
+        { id:'EX-2', partner:'Ananya Patel', avatar:'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop', give:'C Programming', get:'Arduino & IoT', status:'active', date:'Ongoing' },
+        { id:'EX-3', partner:'Vikram Raman', avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop', give:'Web Development', get:'Machine Learning', status:'pending', date:'Sent 2 days ago' }
+      ];
+      setStoredData(STORAGE_EXCHANGES_KEY, initialEx);
+    }
+
+    if (!localStorage.getItem(STORAGE_SESSIONS_KEY)) {
+      const initialSessions = [
+        { id:'SES-1', partner:'Ananya Patel', avatar:'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop', topic:'C Programming – Pointers & Memory', date:'Tomorrow at 3:30 PM', location:'SkillBridge Virtual Room #102', color:'#10b981' },
+        { id:'SES-2', partner:'Priya Sundaram', avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop', topic:'REST API Integration with React', date:'Friday at 5:30 PM', location:'Campus Tech Hub / Online', color:'#6366f1' }
+      ];
+      setStoredData(STORAGE_SESSIONS_KEY, initialSessions);
+    }
+
+    if (!localStorage.getItem(STORAGE_REVIEWS_KEY)) {
+      const initialReviews = [
+        { id:'REV-1', author:'Divya Krishnan', avatar:'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=80&auto=format&fit=crop', dept:'IT 1st Year', skill:'Java Fundamentals', rating:5, comment:'Alex is an incredible peer teacher! Broke down OOP with real-world analogies.', date:'2 days ago' },
+        { id:'REV-2', author:'Sneha Murugan', avatar:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop', dept:'AgriTech 3rd Year', skill:'HTML & CSS', rating:5, comment:'Super helpful! Guided me step-by-step on flexbox for my smart farming portal.', date:'1 week ago' }
+      ];
+      setStoredData(STORAGE_REVIEWS_KEY, initialReviews);
+    }
+
+    let pendingRequests = [
+      { id:'REQ-1', name:'Rahul Sharma', avatar:'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&auto=format&fit=crop', swap:'Java → Python swap', give:'Java', get:'Python' },
+      { id:'REQ-2', name:'Priya Sundaram', avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop', swap:'Web Dev → UI/UX swap', give:'Web Dev', get:'UI/UX Design' }
+    ];
+
+    let activities = [
+      { icon:'✅', text:'Completed Java session with Divya Krishnan', meta:'2 days ago · Rated 5 ⭐', bg:'rgba(16,185,129,0.08)', border:'rgba(16,185,129,0.15)' },
+      { icon:'📨', text:'New message from Ananya Patel', meta:'3 hours ago · C Programming confirmed', bg:'rgba(99,102,241,0.08)', border:'rgba(99,102,241,0.15)' },
+      { icon:'🏆', text:'Badge Earned: Top Mentor', meta:'This week · Completed 10+ high-rated exchanges', bg:'rgba(245,158,11,0.08)', border:'rgba(245,158,11,0.15)' }
+    ];
+
+    // ── REAL-TIME EVENT LISTENER ACROSS TABS ──
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_MSG_KEY || e.key === STORAGE_EXCHANGES_KEY || e.key === STORAGE_REVIEWS_KEY) {
+        if (currentUser) {
+          renderAllTabs();
+          showToast('Live Update', 'New synchronization from Admin / Peers received', 'info');
+        }
+      }
+    });
+
+    // ── TOAST HELPER ──
+    function showToast(title, msg, type='success') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      t.innerHTML = `
+        <span class="text-lg">${icon}</span>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-white">${title}</p>
+          <p class="text-[11px] text-slate-300">${msg}</p>
+        </div>
+      `;
+      c.appendChild(t);
+      setTimeout(() => {
+        t.style.animation = 'toastOut 0.3s forwards';
+        setTimeout(() => t.remove(), 300);
+      }, 3500);
+    }
+
+    // ── LOGIN / LOGOUT ──
+    function doStudentLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('studentEmail').value.trim();
+      if (!email) { alert('Please enter your email or roll number'); return; }
+      quickLogin('alex');
+    }
+
+    function quickLogin(key) {
+      currentUser = DEFAULT_USERS[key] || DEFAULT_USERS.alex;
+      showDashboard();
+      showToast('Welcome Back', `Logged in as ${currentUser.name}`);
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('dashboardScreen').classList.remove('hidden');
+
+      document.getElementById('navAvatar').innerHTML = `<img src="${currentUser.avatar}" class="w-full h-full object-cover">`;
+      document.getElementById('welcomeName').textContent = currentUser.name.split(' ')[0];
+
+      document.getElementById('sidebarUserCard').innerHTML = `
+        <div class="flex items-center gap-2">
+          <img src="${currentUser.avatar}" class="w-9 h-9 rounded-lg object-cover ring-2 ring-indigo-500/40">
+          <div><p class="text-xs font-bold text-white">${currentUser.name}</p><p class="text-[10px] text-indigo-300/60">${currentUser.dept}</p></div>
+        </div>`;
+
+      document.getElementById('statExchanges').textContent = currentUser.exchanges;
+      document.getElementById('statSessions').textContent  = currentUser.sessions;
+      document.getElementById('statRating').textContent    = currentUser.rating;
+      document.getElementById('statVotes').textContent     = currentUser.votes;
+      document.getElementById('repScore').textContent      = currentUser.rating;
+
+      renderAllTabs();
+      switchTab('overview');
+    }
+
+    function doLogout() {
+      currentUser = null;
+      document.getElementById('dashboardScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      showToast('Logged Out', 'You have been safely signed out.', 'info');
+    }
+
+    // ── TAB SWITCHING ──
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.add('hidden'));
+      const activePanel = document.getElementById('panel-' + tab);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('nav-active');
+        b.style.background = '';
+        b.style.color = '';
+      });
+      const btn = document.getElementById('tab-' + tab);
+      if (btn) btn.classList.add('nav-active');
+
+      if (tab === 'messages') {
+        document.getElementById('unreadMsgBadge').style.display = 'none';
+      }
+    }
+
+    // ── RENDER ALL TABS ──
+    function renderAllTabs() {
+      if (!currentUser) return;
+
+      // 1. Overview Tab: Teaching skills
+      const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#8b5cf6'];
+      document.getElementById('teachSkillsList').innerHTML = currentUser.teach.map((s,i) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl" style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.2)">
+          <div class="flex items-center gap-3">
+            <div class="w-2.5 h-2.5 rounded-full" style="background:${colors[i % colors.length]}"></div>
+            <span class="text-xs font-semibold text-white">${s}</span>
+          </div>
+          <button onclick="removeSkill('teach', '${s}')" class="text-[11px] text-slate-400 hover:text-red-400 transition-colors">✕</button>
+        </div>`).join('');
+
+      // Pending requests
+      document.getElementById('pendingRequestsCountBadge').textContent = pendingRequests.length;
+      document.getElementById('pendingRequestsList').innerHTML = pendingRequests.length ? pendingRequests.map(r => `
+        <div class="p-3 rounded-xl flex items-center gap-3" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2)">
+          <img src="${r.avatar}" class="w-9 h-9 rounded-lg object-cover">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-white">${r.name}</p>
+            <p class="text-[11px] text-indigo-300/60">${r.swap}</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="acceptRequest('${r.id}')" class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center hover:bg-emerald-500/40 transition-all font-bold">✓</button>
+            <button onclick="rejectRequest('${r.id}')" class="w-7 h-7 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all font-bold">✗</button>
+          </div>
+        </div>`).join('') : `<p class="text-xs text-indigo-300/50 py-4 text-center">No pending exchange requests right now.</p>`;
+
+      // Recent Activity
+      document.getElementById('recentActivityList').innerHTML = activities.map(a => `
+        <div class="flex items-center gap-3 p-3 rounded-xl" style="background:${a.bg}; border:1px solid ${a.border}">
+          <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0"><span class="text-sm">${a.icon}</span></div>
+          <div><p class="text-xs font-semibold text-white">${a.text}</p><p class="text-[11px] text-indigo-300/60">${a.meta}</p></div>
+        </div>`).join('');
+
+      // 2. Full Skills Tab
+      document.getElementById('teachSkillsFull').innerHTML = currentUser.teach.map(s => `
+        <div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2)">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">📗</div>
+            <div><p class="text-sm font-semibold text-white">${s}</p><p class="text-xs text-emerald-300/60">Verified & Active</p></div>
+          </div>
+          <button onclick="removeSkill('teach', '${s}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">Remove</button>
+        </div>`).join('');
+
+      document.getElementById('learnSkillsFull').innerHTML = currentUser.learn.map(s => `
+        <div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.2)">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">📘</div>
+            <div><p class="text-sm font-semibold text-white">${s}</p><p class="text-xs text-indigo-300/60">Actively Seeking Swap</p></div>
+          </div>
+          <button onclick="removeSkill('learn', '${s}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">Remove</button>
+        </div>`).join('');
+
+      // 3. Exchanges Tab
+      const exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+      const statusStyle = {completed:'16,185,129', active:'99,102,241', pending:'245,158,11'};
+      document.getElementById('exchangeList').innerHTML = exchanges.map(ex => `
+        <div class="glass-bright rounded-2xl p-4 flex items-center gap-4">
+          <img src="${ex.avatar}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-indigo-500/30">
+          <div class="flex-1">
+            <p class="font-bold text-white text-sm">${ex.partner}</p>
+            <p class="text-xs text-indigo-300/60 mt-0.5">Teaching <strong class="text-indigo-300">${ex.give}</strong> · Learning <strong class="text-purple-300">${ex.get}</strong></p>
+          </div>
+          <div class="text-right">
+            <span class="px-2 py-1 rounded-full text-[10px] font-bold text-white" style="background:rgba(${statusStyle[ex.status]||'99,102,241'},0.3); border:1px solid rgba(${statusStyle[ex.status]||'99,102,241'},0.4)">${ex.status.toUpperCase()}</span>
+            <p class="text-[11px] text-indigo-300/40 mt-1">${ex.date}</p>
+          </div>
+        </div>`).join('');
+
+      // 4. Sessions Tab
+      const sessions = getStoredData(STORAGE_SESSIONS_KEY, []);
+      document.getElementById('sessionCards').innerHTML = sessions.map(s => `
+        <div class="glass-bright rounded-2xl p-5 perspective">
+          <div class="card-3d">
+            <div class="flex items-center gap-3 mb-4">
+              <img src="${s.avatar}" class="w-10 h-10 rounded-xl object-cover">
+              <div><p class="font-bold text-white text-sm">${s.partner}</p><p class="text-xs text-indigo-300/60">${s.topic}</p></div>
+            </div>
+            <div class="space-y-2 text-xs text-indigo-200/80">
+              <div class="flex items-center gap-2">📅 ${s.date}</div>
+              <div class="flex items-center gap-2">📍 ${s.location}</div>
+            </div>
+            <button onclick="joinSessionRoom('${s.partner}', '${s.topic}')" class="mt-4 w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 shadow-md" style="background:linear-gradient(135deg,${s.color||'#6366f1'},#8b5cf6)">
+              🚀 Join Live Virtual Session →
+            </button>
+          </div>
+        </div>`).join('');
+
+      // 5. Messages Tab (Shared with Admin)
+      const msgs = getStoredData(STORAGE_MSG_KEY, []);
+      document.getElementById('messagesFeedList').innerHTML = msgs.length ? msgs.map(m => `
+        <div class="p-4 rounded-2xl border ${m.role==='Admin'?'border-purple-500/40 bg-purple-950/20':'border-indigo-500/30 bg-slate-900/60'}">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${m.role==='Admin'?'bg-purple-600 text-white':'bg-indigo-600 text-white'}">${m.role}</span>
+              <span class="text-xs font-bold text-white">${m.sender}</span>
+              <span class="text-[10px] text-slate-400">· ${m.time}</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300 border border-indigo-500/20">${m.category}</span>
+          </div>
+          <p class="text-xs font-bold text-slate-100 mb-1">${m.subject}</p>
+          <p class="text-xs text-slate-300 leading-relaxed">${m.body}</p>
+          ${m.reply ? `
+            <div class="mt-3 p-3 rounded-xl bg-purple-900/30 border border-purple-500/30">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-bold text-purple-300">🛡️ Campus Admin Response</span>
+                <span class="text-[9px] text-purple-400/60">· ${m.reply.time || 'Recently'}</span>
+              </div>
+              <p class="text-xs text-purple-100">${m.reply.text}</p>
+            </div>
+          ` : ''}
+        </div>`).join('') : `<p class="text-xs text-slate-400 text-center py-8">No messages recorded yet.</p>`;
+
+      // 6. Reviews Tab
+      const reviews = getStoredData(STORAGE_REVIEWS_KEY, []);
+      document.getElementById('reviewList').innerHTML = reviews.map(r => `
+        <div class="glass-bright rounded-2xl p-5">
+          <div class="flex items-center gap-3 mb-3">
+            <img src="${r.avatar}" class="w-10 h-10 rounded-xl object-cover">
+            <div>
+              <p class="font-bold text-white text-sm">${r.author}</p>
+              <p class="text-[11px] text-indigo-300/50">${r.dept} · ${r.date}</p>
+            </div>
+            <div class="ml-auto text-amber-400 text-sm">${'★'.repeat(r.rating || 5)}</div>
+          </div>
+          <p class="text-xs text-indigo-200/80 leading-relaxed italic">"${r.comment}"</p>
+          <span class="mt-2 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold text-indigo-300" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.25)">${r.skill}</span>
+        </div>`).join('');
+    }
+
+    // ── SEND MESSAGE TO ADMIN (SHARED WITH ADMIN PORTAL) ──
+    function handleSendAdminMessage(e) {
+      e.preventDefault();
+      const cat = document.getElementById('msgCategory').value;
+      const sub = document.getElementById('msgSubject').value.trim();
+      const body = document.getElementById('msgBody').value.trim();
+      sendMessageToAdminPayload(cat, sub, body);
+      document.getElementById('msgSubject').value = '';
+      document.getElementById('msgBody').value = '';
+    }
+
+    function handleSendAdminMessageModal(e) {
+      e.preventDefault();
+      const cat = document.getElementById('modalMsgCategory').value;
+      const sub = document.getElementById('modalMsgSubject').value.trim();
+      const body = document.getElementById('modalMsgBody').value.trim();
+      sendMessageToAdminPayload(cat, sub, body);
+      closeModal('modalAdminMessage');
+      document.getElementById('modalMsgSubject').value = '';
+      document.getElementById('modalMsgBody').value = '';
+    }
+
+    function sendMessageToAdminPayload(category, subject, body) {
+      const newMsg = {
+        id: 'MSG-' + Math.floor(100 + Math.random() * 900),
+        sender: currentUser ? currentUser.name : 'Alex Johnson',
+        senderAvatar: currentUser ? currentUser.avatar : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop',
+        dept: currentUser ? currentUser.dept : 'Information Technology',
+        role: 'Student',
+        category: category,
+        subject: subject,
+        body: body,
+        time: 'Just now',
+        status: 'Pending Review',
+        reply: null
+      };
+
+      // Save to shared messages list
+      const msgs = getStoredData(STORAGE_MSG_KEY, []);
+      msgs.unshift(newMsg);
+      setStoredData(STORAGE_MSG_KEY, msgs);
+
+      // If category is a report or misconduct, also push to shared reports list for Admin
+      if (category === 'Conduct Violation' || category === 'Exchange Conflict') {
+        const reports = getStoredData(STORAGE_REPORTS_KEY, []);
+        reports.unshift({
+          id: 'REP-' + Math.floor(100 + Math.random() * 900),
+          from: newMsg.sender,
+          against: 'Reported Subject',
+          reason: `${subject}: ${body}`,
+          status: 'Pending Review',
+          time: 'Just now',
+          severity: 'high'
+        });
+        setStoredData(STORAGE_REPORTS_KEY, reports);
+      }
+
+      // Add to activities
+      activities.unshift({
+        icon: '📨',
+        text: `Sent message to Admin: "${subject}"`,
+        meta: 'Just now · Broadcasted to Admin Control Panel',
+        bg: 'rgba(139,92,246,0.08)',
+        border: 'rgba(139,92,246,0.2)'
+      });
+
+      renderAllTabs();
+      showToast('Message Transmitted', 'Your message was shared with the Admin Portal in real time!');
+    }
+
+    // ── ACCEPT / REJECT REQUESTS ──
+    function acceptRequest(id) {
+      const req = pendingRequests.find(r => r.id === id);
+      if (!req) return;
+      pendingRequests = pendingRequests.filter(r => r.id !== id);
+
+      // Add to exchanges
+      const exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+      exchanges.unshift({
+        id: 'EX-' + Date.now(),
+        partner: req.name,
+        avatar: req.avatar,
+        give: req.give,
+        get: req.get,
+        status: 'active',
+        date: 'Just Started'
+      });
+      setStoredData(STORAGE_EXCHANGES_KEY, exchanges);
+
+      // Update counters
+      currentUser.exchanges += 1;
+      document.getElementById('statExchanges').textContent = currentUser.exchanges;
+
+      activities.unshift({
+        icon: '🤝',
+        text: `Accepted skill exchange with ${req.name}`,
+        meta: `Just now · ${req.give} ⇄ ${req.get}`,
+        bg: 'rgba(16,185,129,0.08)',
+        border: 'rgba(16,185,129,0.2)'
+      });
+
+      renderAllTabs();
+      showToast('Exchange Started', `You and ${req.name} are now connected!`);
+    }
+
+    function rejectRequest(id) {
+      pendingRequests = pendingRequests.filter(r => r.id !== id);
+      renderAllTabs();
+      showToast('Request Declined', 'Exchange request was removed.', 'info');
+    }
+
+    // ── SKILL ADD / REMOVE ──
+    function promptAddSkill(type) {
+      const skill = prompt(type === 'teach' ? 'Enter a skill you want to teach (e.g. Kotlin, Docker, Flutter):' : 'Enter a skill you want to learn (e.g. React Native, AWS):');
+      if (skill && skill.trim()) {
+        const clean = skill.trim();
+        if (type === 'teach') {
+          if (!currentUser.teach.includes(clean)) currentUser.teach.push(clean);
+        } else {
+          if (!currentUser.learn.includes(clean)) currentUser.learn.push(clean);
+        }
+        renderAllTabs();
+        showToast('Skill Updated', `Added "${clean}" to your ${type === 'teach' ? 'teaching' : 'learning'} list!`);
+      }
+    }
+
+    function removeSkill(type, skill) {
+      if (confirm(`Remove "${skill}" from your profile?`)) {
+        if (type === 'teach') {
+          currentUser.teach = currentUser.teach.filter(s => s !== skill);
+        } else {
+          currentUser.learn = currentUser.learn.filter(s => s !== skill);
+        }
+        renderAllTabs();
+        showToast('Skill Removed', `"${skill}" has been removed.`);
+      }
+    }
+
+    // ── PROPOSE EXCHANGE ──
+    function handleCreateExchange(e) {
+      e.preventDefault();
+      const p = document.getElementById('newExPartner').value.trim();
+      const g = document.getElementById('newExGive').value.trim();
+      const t = document.getElementById('newExGet').value.trim();
+
+      const exchanges = getStoredData(STORAGE_EXCHANGES_KEY, []);
+      exchanges.unshift({
+        id: 'EX-' + Date.now(),
+        partner: p,
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop',
+        give: g,
+        get: t,
+        status: 'pending',
+        date: 'Proposal Sent'
+      });
+      setStoredData(STORAGE_EXCHANGES_KEY, exchanges);
+      closeModal('modalNewExchange');
+      renderAllTabs();
+      showToast('Proposal Dispatched', `Exchange proposal sent to ${p}!`);
+    }
+
+    // ── SCHEDULE SESSION ──
+    function handleScheduleSession(e) {
+      e.preventDefault();
+      const partner = document.getElementById('sessionPartnerInput').value.trim();
+      const topic = document.getElementById('sessionTopicInput').value.trim();
+      const date = document.getElementById('sessionDateInput').value.trim();
+      const location = document.getElementById('sessionLocationInput').value.trim();
+
+      const sessions = getStoredData(STORAGE_SESSIONS_KEY, []);
+      sessions.unshift({
+        id: 'SES-' + Date.now(),
+        partner: partner,
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop',
+        topic: topic,
+        date: date,
+        location: location,
+        color: '#6366f1'
+      });
+      setStoredData(STORAGE_SESSIONS_KEY, sessions);
+      closeModal('modalScheduleSession');
+      renderAllTabs();
+      showToast('Session Booked', `Meeting scheduled with ${partner} for ${date}!`);
+    }
+
+    // ── JOIN SESSION ROOM ──
+    function joinSessionRoom(partner, topic) {
+      document.getElementById('sessionModalPartner').textContent = partner;
+      document.getElementById('sessionModalTopic').textContent = 'Topic: ' + topic;
+      openModal('modalLiveSession');
+      showToast('Connecting', `Joined interactive room with ${partner}...`);
+    }
+
+    function endSessionCall() {
+      closeModal('modalLiveSession');
+      currentUser.sessions += 1;
+      document.getElementById('statSessions').textContent = currentUser.sessions;
+      showToast('Session Concluded', 'Virtual session finished. Reputation score updated!');
+    }
+
+    // ── LEAVE PEER REVIEW ──
+    function handleLeaveReview(e) {
+      e.preventDefault();
+      const p = document.getElementById('reviewPartner').value.trim();
+      const s = document.getElementById('reviewSkill').value.trim();
+      const r = parseInt(document.getElementById('reviewRating').value);
+      const c = document.getElementById('reviewComment').value.trim();
+
+      const reviews = getStoredData(STORAGE_REVIEWS_KEY, []);
+      reviews.unshift({
+        id: 'REV-' + Date.now(),
+        author: currentUser ? currentUser.name : 'Alex Johnson',
+        avatar: currentUser ? currentUser.avatar : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop',
+        dept: `${currentUser ? currentUser.dept : 'IT'} (${p})`,
+        skill: s,
+        rating: r,
+        comment: c,
+        date: 'Just now'
+      });
+      setStoredData(STORAGE_REVIEWS_KEY, reviews);
+      closeModal('modalLeaveReview');
+      renderAllTabs();
+      showToast('Review Submitted', `Thank you! Your feedback for ${p} is now live.`);
+    }
+
+    // ── MODAL HELPERS ──
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+    }
+    function openMessageModal() { openModal('modalAdminMessage'); }
+    function openNewExchangeModal() { openModal('modalNewExchange'); }
+    function openScheduleSessionModal() { openModal('modalScheduleSession'); }
+    function openLeaveReviewModal() { openModal('modalLeaveReview'); }
+  </script>
+</body>
+</html>
